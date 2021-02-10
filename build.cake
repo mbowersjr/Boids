@@ -1,0 +1,45 @@
+//////////////////////////////////////////////////////////////////////
+// ARGUMENTS
+//////////////////////////////////////////////////////////////////////
+
+var target = Argument("target", "Default");
+var configuration = Argument("configuration", "Debug");
+
+//////////////////////////////////////////////////////////////////////
+// PREPARATION
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// TASKS
+//////////////////////////////////////////////////////////////////////
+
+Task("Build")
+    .Does(context =>
+{
+    DotNetCoreBuild("./Boids.Core.sln", new DotNetCoreBuildSettings() {
+    	Configuration = configuration,
+        NoIncremental = context.HasArgument("rebuild"),
+        MSBuildSettings = new DotNetCoreMSBuildSettings()
+            .TreatAllWarningsAs(MSBuildTreatAllWarningsAs.Error)
+	});
+});
+
+Task("Test")
+    .IsDependentOn("Build")
+    .Does(context =>
+{
+    DotNetCoreTest("./Boids.Core.Tests/Boids.Core.Tests.csproj", new DotNetCoreTestSettings {
+        Configuration = configuration,
+        NoRestore = true,
+        NoBuild = true
+    });
+});
+
+Task("Default")
+    .IsDependentOn("Build");
+
+//////////////////////////////////////////////////////////////////////
+// EXECUTION
+//////////////////////////////////////////////////////////////////////
+
+RunTarget(target);

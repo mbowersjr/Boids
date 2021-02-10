@@ -3,27 +3,44 @@
     "tasks": [
         {
             "label": "build",
+            "detail": "Build",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Boids.Core/Boids.Core.csproj",
+                "${workspaceFolder}/Boids.Core.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
-            "label": "publish",
+            "label": "build build.cake",
+            "detail": "Build using Cake (dotnet tool)",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "publish",
-                "${workspaceFolder}/Boids.Core/Boids.Core.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "cake",
+                "--configuration",
+                "Debug"
             ],
-            "problemMatcher": "$msCompile"
+            "group": "build",
+            "problemMatcher": "$cake"
+        },
+        {
+            "label": "build build.ps1",
+            "detail": "Build using Cake (bootstrapper)",
+            "command": "pwsh",
+            "type": "shell",
+            "args": [
+                ".\\build.ps1 -WhatIf"
+            ],
+            "group": "build",
+            "problemMatcher": "$cake"
         },
         {
             "label": "watch",

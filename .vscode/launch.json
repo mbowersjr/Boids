@@ -8,7 +8,7 @@
             "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build build.cake",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/Boids.Core/bin/Debug/netcoreapp3.1/Boids.Core.dll",
             "args": [],
