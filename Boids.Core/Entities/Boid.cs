@@ -13,8 +13,8 @@ namespace Boids.Core.Entities
         private const int _speed = 5;
         private const int _turnSpeed = 30 / _speed;
 
-        public Vector2 _position { get; private set; }
-        public Vector2 _cellPosition { get; private set; }
+        public Vector2 _position;
+        public Vector2 _cellPosition;
 
         public Vector2 _velocity = new Vector2(_rand.Next() * 2 - 1, _rand.Next() * 2 - 1);
         public Vector2 _acceleration = new Vector2();
@@ -67,7 +67,7 @@ namespace Boids.Core.Entities
             }
 
             _position += _velocity;
-            _cellPosition = new Vector2(_position.X / MainGame.CellWidth, _position.Y / MainGame.CellHeight);
+            MainGame.Grid.GetCellPosition(ref _position, out _cellPosition);
 
             Borders();
         }
