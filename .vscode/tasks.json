@@ -1,59 +1,37 @@
 {
     "version": "2.0.0",
     "tasks": [
+        // {
+        //     "label": "build",
+        //     "detail": "Build",
+        //     "command": "dotnet",
+        //     "type": "process",
+        //     "args": [
+        //         "build",
+        //         "${workspaceFolder}/Boids.Core.sln",
+        //         "/property:GenerateFullPaths=true",
+        //         "/consoleloggerparameters:NoSummary"
+        //     ],
+        //     "problemMatcher": "$msCompile",
+        //     "group": "build"
+        // },
         {
             "label": "build",
-            "detail": "Build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/Boids.Core.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        },
-        {
-            "label": "build build.cake",
-            "detail": "Build using Cake (dotnet tool)",
+            "detail": "Build (build.cake)",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "cake",
                 "--configuration",
-                "Debug"
+                "Debug",
+                "--target",
+                "Build"
             ],
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": "$cake"
-        },
-        {
-            "label": "build build.ps1",
-            "detail": "Build using Cake (bootstrapper)",
-            "command": "pwsh",
-            "type": "shell",
-            "args": [
-                ".\\build.ps1 -WhatIf"
-            ],
-            "group": "build",
-            "problemMatcher": "$cake"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "${workspaceFolder}/Boids.Core/Boids.Core.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
         }
     ]
 }
