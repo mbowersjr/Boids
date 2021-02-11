@@ -9,28 +9,33 @@ namespace Boids.Core.Entities
         private static Random _rand = new Random();
 
         public static Texture2D BoidSprite;
-        private Vector2 _boidSpriteOrigin = new Vector2(5f,5f);
-        private const int _speed = 5;
-        private const int _turnSpeed = 30 / _speed;
+        private static Vector2 _boidSpriteOrigin = new Vector2(5f,5f);
 
-        public Vector2 _position;
-        public Vector2 _cellPosition;
+        private const int Speed = 5;
+        private const int TurnSpeed = 30 / Speed;
 
-        public Vector2 _velocity = new Vector2(_rand.Next() * 2 - 1, _rand.Next() * 2 - 1);
-        public Vector2 _acceleration = new Vector2();
+        public Vector2 Position { get; set; }
+        public Vector2 CellPosition { get; set; }
 
-        private Flock _flock;
+        public Vector2 Velocity { get; set; }
+        public Vector2 Acceleration { get; set; }
 
-        public Boid(int x, int y, Flock flock)
+        private readonly Flock _flock;
+
+        public Boid(Vector2 position, Flock flock)
         {
-            _position = new Vector2(x, y);
+            Position = position;
+            Velocity = RandomStatic.NextUnitVector() * RandomStatic.NextSingle(1f, 2f);
+
+            Console.WriteLine($"Boid spawn: P: {Position.X},{Position.Y} V: {Velocity.X},{Velocity.Y}");
+
             _flock = flock;
         }
 
         public void Draw(SpriteBatch sb)
         {
             sb.Draw(texture: BoidSprite,
-                    position: _position,
+                    position: Position,
                     sourceRectangle: null,
                     color: Color.White,
                     rotation: GetRotationRad(),
@@ -39,45 +44,45 @@ namespace Boids.Core.Entities
                     effects: SpriteEffects.None,
                     layerDepth: 0f);
 
-            sb.DrawLine(point1: _position,
-                        point2: _position + _velocity * 3,
+            sb.DrawLine(point1: Position,
+                        point2: Position + Vector2.Normalize(Velocity) * 10f,
                         color: Color.Red,
                         thickness: 2);
         }
 
         public float GetRotationRad()
         {
-            return (float)Math.Atan2(_velocity.Y, _velocity.X) + MathHelper.PiOver2;
+            return (float)Math.Atan2(Velocity.Y, Velocity.X) + MathHelper.PiOver2;
         }
 
         public void Accelerate(Vector2 accel)
         {
-            _acceleration += accel / _turnSpeed;
+            Acceleration += accel / TurnSpeed;
         }
 
         public void Run()
         {
-            _velocity += _acceleration;
-            _acceleration = Vector2.Zero;
+            Velocity += Acceleration;
+            Acceleration = Vector2.Zero;
 
-            if (Math.Abs(_velocity.Length()) > _speed)
+            if (Math.Abs(Velocity.Length()) > Speed)
             {
-                _velocity.Normalize();
-                _velocity *= _speed;
+                Velocity.Normalize();
+                Velocity *= Speed;
             }
 
-            _position += _velocity;
-            MainGame.Grid.GetCellPosition(ref _position, out _cellPosition);
+            Position += Velocity;
+            CellPosition = _flock.Grid.GetCellPosition(Position);
 
             Borders();
         }
 
         private void Borders()
         {
-            if (_position.X < 0 || _position.X > MainGame.ScreenWidth ||
-                _position.Y < 0 || _position.Y > MainGame.ScreenHeight)
+            if (Position.X < 0 || Position.X > MainGame.ScreenWidth ||
+                Position.Y < 0 || Position.Y > MainGame.ScreenHeight)
             {
-                _position = new Vector2(MainGame.ScreenWidth / 2, MainGame.ScreenHeight / 2);
+                Position = new Vector2(MainGame.ScreenWidth / 2f, MainGame.ScreenHeight / 2f);
             }
         }
     }

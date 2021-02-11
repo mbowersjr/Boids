@@ -70,6 +70,11 @@ namespace Boids.Core
             _spriteBatch.End();
         }
 
+        public Vector2 GetCellPosition(Vector2 position)
+        {
+            return new Vector2(position.X / CellWidth, position.Y / CellHeight);
+        }
+
         public void GetCellPosition(ref Vector2 position, out Vector2 cellPosition)
         {
             cellPosition.X = position.X / CellWidth;

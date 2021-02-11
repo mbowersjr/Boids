@@ -29,6 +29,8 @@ namespace Boids.Core
 
             _graphics.ApplyChanges();
 
+            Content.RootDirectory = "Content";
+
             Grid = new GridRenderer(GraphicsDevice, 32, 24);
         }
 
@@ -45,7 +47,7 @@ namespace Boids.Core
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            Boid.BoidSprite = Content.Load<Texture2D>("Content/Boid");
+            Boid.BoidSprite = Content.Load<Texture2D>("Images/Boid");
         }
 
         protected override void UnloadContent()
