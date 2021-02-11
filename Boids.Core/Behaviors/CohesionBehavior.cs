@@ -16,14 +16,19 @@ namespace Boids.Core.Behaviors
 
             foreach (Boid other in boids)
             {
-                if (Math.Abs((boid.CellPosition - other.CellPosition).Length()) > 1)
-                {
+                if (other == boid)
                     continue;
-                }
 
+                if (!other.IsActive)
+                    continue;
+
+                // Cell position distance
+                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 1f)
+                    continue;
+
+                // Position distance
                 var distance = Vector2.Distance(boid.Position, other.Position);
-
-                if (distance < radius && distance > 0)
+                if (distance < radius && distance > 0f)
                 {
                     cohere += other.Position;
                     count++;
@@ -35,10 +40,7 @@ namespace Boids.Core.Behaviors
                 cohere /= count;
             }
 
-            var dir = cohere - boid.Position;
-            dir.Normalize();
-
-            return dir;
+            return Vector2.Normalize(cohere - boid.Position);
         }
     }
 }

@@ -16,11 +16,12 @@ namespace Boids.Core.Behaviors
 
             foreach (Vector2 point in points)
             {
-                var distance = Vector2.Distance(boid.Position, point);
+                var direction = boid.Position - point;
+                var distance = direction.Length();
 
                 if (distance < radius && distance > 0)
                 {
-                    avoid += (boid.Position - point) / (float)Math.Pow(distance, 5);
+                    avoid += direction / MathF.Pow(distance, 5f);
                     count++;
                 }
             }
@@ -30,7 +31,7 @@ namespace Boids.Core.Behaviors
                 avoid /= count;
             }
 
-            if (avoid.Length() > 0)
+            if (avoid.Length() > 0f)
             {
                 avoid.Normalize();
             }

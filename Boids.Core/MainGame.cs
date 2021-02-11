@@ -19,15 +19,25 @@ namespace Boids.Core
 
         public static PartitionGrid Grid { get; private set; }
 
-        Flock _flock;
+        private Flock _flock;
 
         private readonly ILogger<MainGame> _logger;
+        private readonly IOptionsMonitor<BoidsOptions> _optionsMonitor;
         public static BoidsOptions Options { get; private set; }
 
-        public MainGame(BoidsOptions options, ILogger<MainGame> logger = null)
+        public MainGame(IOptionsMonitor<BoidsOptions> optionsMonitor = null, ILogger<MainGame> logger = null)
         {
             _logger = logger ?? NullLogger<MainGame>.Instance;
-            Options = options;
+            _optionsMonitor = optionsMonitor;
+
+            Options = _optionsMonitor.CurrentValue;
+
+            _optionsMonitor.OnChange(options =>
+            {
+                Options = options;
+
+                _flock.ResetFlock();
+            });
 
             _logger.LogInformation("Initializing graphics device. BackBuffer resolution: {X} x {Y} VSync: {VSync}", Options.Graphics.Resolution.X, Options.Graphics.Resolution.Y, Options.Graphics.VSync);
 
@@ -44,7 +54,7 @@ namespace Boids.Core
             Content.RootDirectory = "Content";
 
 
-            _gridRenderer = new PartitionGridRenderer(GraphicsDevice, Options.PartitionGrid.CellsX, Options.PartitionGrid.CellsY);
+            _gridRenderer = new PartitionGridRenderer(GraphicsDevice);
             Grid = _gridRenderer.Grid;
         }
 

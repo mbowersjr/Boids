@@ -9,42 +9,57 @@ namespace Boids.Core.Entities
 {
     public class Flock
     {
-        private readonly List<Boid> _boids;
-        private const int _numBoids = 100;
-
+        private List<Boid> _boids;
         private readonly FlockBehaviors _flockBehaviors;
 
         public PartitionGrid _grid;
 
         public Flock()
         {
-            _boids = new List<Boid>(_numBoids);
-
-            for (var i = 0; i < _numBoids; i++)
-            {
-                var position = new Vector2(RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.X),
-                                           RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.Y));
-                var boid = new Boid(position, this);
-                Add(boid);
-            }
+            ResetFlock();
 
             _flockBehaviors = new FlockBehaviors();
         }
 
+        public void ResetFlock()
+        {
+            _boids = new List<Boid>(MainGame.Options.Count);
+
+            for (var i = 0; i < MainGame.Options.Count; i++)
+            {
+                var boid = new Boid(this);
+                _boids.Add(boid);
+                ResetBoid(boid);
+            }
+        }
+
+        public void ResetBoid(Boid boid)
+        {
+            boid.IsActive = true;
+            boid.Position = new Vector2(RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.X),
+                                        RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.Y));
+            boid.CellPosition = MainGame.Grid.GetCellPosition(boid.Position);
+            boid.Velocity = RandomStatic.NextUnitVector() * RandomStatic.NextSingle(1f, 2f);
+            boid.Acceleration = Vector2.Zero;
+        }
+
         public void Add(Boid boid)
         {
-            _boids.Add(boid);
+            boid.IsActive = true;
         }
 
         public void Remove(Boid boid)
         {
-            _boids.Remove(boid);
+            boid.IsActive = false;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
             foreach (Boid boid in _boids)
             {
+                if (!boid.IsActive)
+                    continue;
+
                 boid.Draw(spriteBatch);
             }
         }
@@ -62,27 +77,39 @@ namespace Boids.Core.Entities
 
         public void Update()
         {
-            Task.Run(() =>
+            foreach (Boid boid in _boids)
             {
-                foreach (Boid boid in _boids)
+                if (!boid.IsActive)
+                    continue;
+
+                if (MainGame.Options.Behaviors.Avoidance)
                 {
                     var avoidanceForce = _flockBehaviors.Avoidance.Avoidance(boid, _boids) * 1.5f;
                     boid.Accelerate(avoidanceForce);
+                }
 
+                if (MainGame.Options.Behaviors.AvoidPoints)
+                {
                     var avoidPointsForce = _flockBehaviors.AvoidPoints.AvoidPoints(boid, GetBorderPoints(boid)) * 5f;
                     boid.Accelerate(avoidPointsForce);
+                }
 
+                if (MainGame.Options.Behaviors.Alignment)
+                {
                     var alignmentForce = _flockBehaviors.Alignment.Alignment(boid, _boids) / 1.5f;
                     boid.Accelerate(alignmentForce);
+                }
 
+                if (MainGame.Options.Behaviors.Cohesion)
+                {
                     var cohesionForce = _flockBehaviors.Cohesion.Cohesion(boid, _boids) / 3f;
                     boid.Accelerate(cohesionForce);
-
-                    boid.Accelerate(boid.Velocity / 7f);
-
-                    boid.Run();
                 }
-            });
+
+                boid.Accelerate(boid.Velocity / 7f);
+
+                boid.Run();
+            }
         }
     }
 }

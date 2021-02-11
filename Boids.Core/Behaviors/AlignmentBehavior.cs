@@ -16,13 +16,18 @@ namespace Boids.Core.Behaviors
 
             foreach (Boid other in boids)
             {
-                if (Math.Abs((boid.CellPosition - other.CellPosition).Length()) > 1)
-                {
+                if (other == boid)
                     continue;
-                }
 
+                if (!other.IsActive)
+                    continue;
+
+                // Cell position distance
+                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 1f)
+                    continue;
+
+                // Position distance
                 var distance = Vector2.Distance(boid.Position, other.Position);
-
                 if (distance < radius && distance > 0)
                 {
                     align += other.Velocity;
@@ -35,10 +40,7 @@ namespace Boids.Core.Behaviors
                 align /= count;
             }
 
-            var dir = align - boid.Velocity;
-            dir.Normalize();
-
-            return dir;
+            return Vector2.Normalize(align - boid.Velocity);
         }
     }
 }

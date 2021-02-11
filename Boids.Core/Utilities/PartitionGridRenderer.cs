@@ -20,14 +20,19 @@ namespace Boids.Core
 
         private readonly ILogger<PartitionGridRenderer> _logger;
 
-        public PartitionGridRenderer(GraphicsDevice graphics, int cellCountX, int cellCountY, ILogger<PartitionGridRenderer> logger = null)
+        public PartitionGridRenderer(GraphicsDevice graphics, ILogger<PartitionGridRenderer> logger = null)
         {
             _logger = logger ?? NullLogger<PartitionGridRenderer>.Instance;
 
-            _logger.LogInformation("Initializing partition grid with cell: {CellCountX} x {CellCountY}", cellCountX, cellCountY);
+            _logger.LogInformation("Initializing partition grid with cell: {CellCountX} x {CellCountY}",
+                                   MainGame.Options.PartitionGrid.CellsX,
+                                   MainGame.Options.PartitionGrid.CellsY);
 
             _graphics = graphics;
-            _grid = new PartitionGrid(_graphics.Viewport.Width, _graphics.Viewport.Height, cellCountX, cellCountY);
+            _grid = new PartitionGrid(MainGame.Options.Graphics.Resolution.X,
+                                      MainGame.Options.Graphics.Resolution.Y,
+                                      MainGame.Options.PartitionGrid.CellsX,
+                                      MainGame.Options.PartitionGrid.CellsY);
         }
 
         public void Initialize()
@@ -59,13 +64,16 @@ namespace Boids.Core
 
         public void Draw()
         {
+            if (!MainGame.Options.PartitionGrid.Visible)
+                return;
+
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
 
             for (int i = 0; i < _gridPoints.Length; i++)
             {
                 _spriteBatch.DrawLine(point1: _gridPoints[i].Item1,
                                       point2: _gridPoints[i].Item2,
-                                      color: LineColor);
+                                      color: MainGame.Options.PartitionGrid.LineColor);
             }
 
             _spriteBatch.End();

@@ -14,19 +14,24 @@ namespace Boids.Core.Entities
         private const int Speed = 5;
         private const int TurnSpeed = 30 / Speed;
 
-        public Vector2 Position { get; set; }
-        public Vector2 CellPosition { get; set; }
+        private Vector2 _position;
+        public Vector2 Position { get => _position; set => _position = value; }
 
-        public Vector2 Velocity { get; set; }
-        public Vector2 Acceleration { get; set; }
+        private Vector2 _cellPosition;
+        public Vector2 CellPosition { get => _cellPosition; set => _cellPosition = value; }
+
+        private Vector2 _velocity;
+        public Vector2 Velocity { get => _velocity; set => _velocity = value; }
+
+        private Vector2 _acceleration;
+        public Vector2 Acceleration { get => _acceleration; set => _acceleration = value; }
+
+        public bool IsActive { get; set; }
 
         private readonly Flock _flock;
 
-        public Boid(Vector2 position, Flock flock)
+        public Boid(Flock flock)
         {
-            Position = position;
-            Velocity = RandomStatic.NextUnitVector() * RandomStatic.NextSingle(1f, 2f);
-
             _flock = flock;
         }
 
@@ -55,11 +60,17 @@ namespace Boids.Core.Entities
 
         public void Accelerate(Vector2 accel)
         {
+            if (!IsActive)
+                return;
+
             Acceleration += accel / TurnSpeed;
         }
 
         public void Run()
         {
+            if (!IsActive)
+                return;
+
             Velocity += Acceleration;
             Acceleration = Vector2.Zero;
 
@@ -69,8 +80,8 @@ namespace Boids.Core.Entities
                 Velocity *= Speed;
             }
 
-            Position += Velocity;
-            CellPosition = MainGame.Grid.GetCellPosition(Position);
+            _position += Velocity;
+            MainGame.Grid.GetCellPosition(ref _position, out _cellPosition);
 
             Borders();
         }
@@ -80,7 +91,7 @@ namespace Boids.Core.Entities
             if (Position.X < 0 || Position.X > MainGame.Options.Graphics.Resolution.X ||
                 Position.Y < 0 || Position.Y > MainGame.Options.Graphics.Resolution.Y)
             {
-                Position = new Vector2(MainGame.Options.Graphics.Resolution.X / 2f, MainGame.Options.Graphics.Resolution.Y / 2f);
+                _position = new Vector2(MainGame.Options.Graphics.Resolution.X / 2f, MainGame.Options.Graphics.Resolution.Y / 2f);
             }
         }
     }

@@ -16,16 +16,23 @@ namespace Boids.Core.Behaviors
 
             foreach (Boid other in boids)
             {
-                if (Math.Abs((boid.CellPosition - other.CellPosition).Length()) > 1)
-                {
+                if (other == boid)
                     continue;
-                }
 
-                var distance = Vector2.Distance(boid.Position, other.Position);
+                if (!other.IsActive)
+                    continue;
 
-                if (distance < radius && distance > 0)
+                // Cell position distance
+                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 1f)
+                    continue;
+
+                // Position distance
+                var direction = boid.Position - other.Position;
+                var distance = direction.Length();
+
+                if (distance < radius && distance > 0f)
                 {
-                    avoid += (boid.Position - other.Position) / (float)Math.Pow(distance, 2);
+                    avoid += direction / MathF.Pow(distance, 2f);
                     count++;
                 }
             }
@@ -35,7 +42,7 @@ namespace Boids.Core.Behaviors
                 avoid /= count;
             }
 
-            if (avoid.Length() > 0)
+            if (avoid.Length() > 0f)
             {
                 avoid.Normalize();
             }

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,26 +13,36 @@ namespace Boids.Core.Services
     public class MainGameHostedService : IHostedService
     {
         private readonly ILogger<MainGameHostedService> _logger;
+        private readonly IServiceProvider _services;
         private readonly IHostApplicationLifetime _appLifetime;
-        private readonly BoidsOptions _options;
+        private readonly IOptionsMonitor<BoidsOptions> _options;
+        private readonly IConfiguration _configuration;
 
-        public MainGameHostedService(BoidsOptions options, ILogger<MainGameHostedService> logger, IHostApplicationLifetime appLifetime)
+        public MainGameHostedService(
+            IHostApplicationLifetime appLifetime,
+            IServiceProvider services,
+            IOptionsMonitor<BoidsOptions> options,
+            IConfiguration configuration,
+            ILogger<MainGameHostedService> logger)
         {
-            _options = options;
-            _logger = logger;
             _appLifetime = appLifetime;
+            _services = services;
+            _options = options;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Starting game loop ...");
-
-            _appLifetime.ApplicationStarted.Register(() =>
+            _appLifetime.ApplicationStarted.Register(async () =>
             {
-                Task.Run(() =>
-                {
+                _logger.LogInformation("Application started");
 
-                    using (var game = new MainGame(_options))
+                await Task.Run(() =>
+                {
+                    _logger.LogInformation("Creating new MainGame instance for lifetime of application");
+
+                    using (var game = ActivatorUtilities.CreateInstance<MainGame>(_services))
                     {
                         game.Run();
                     }

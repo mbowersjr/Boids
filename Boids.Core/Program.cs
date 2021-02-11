@@ -22,7 +22,6 @@ namespace Boids.Core
                 .Run();
         }
 
-
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
             var builder = Host.CreateDefaultBuilder(args);
@@ -30,11 +29,10 @@ namespace Boids.Core
             builder.ConfigureServices((hostContext, services) =>
             {
                 services.AddLogging();
+                services.AddTransient<MainGame>();
                 services.AddHostedService<MainGameHostedService>();
 
-                var boidsOptions = new BoidsOptions();
-                hostContext.Configuration.Bind("Boids", boidsOptions);
-                services.AddSingleton(boidsOptions);
+                services.Configure<BoidsOptions>(hostContext.Configuration.GetSection("Boids"));
             });
 
             builder.ConfigureHostConfiguration(configHost =>
