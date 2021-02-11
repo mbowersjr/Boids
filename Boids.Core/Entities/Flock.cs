@@ -14,7 +14,7 @@ namespace Boids.Core.Entities
 
         private readonly FlockBehaviors _flockBehaviors;
 
-        public GridRenderer Grid => MainGame.Grid;
+        public PartitionGrid _grid;
 
         public Flock()
         {
@@ -22,8 +22,8 @@ namespace Boids.Core.Entities
 
             for (var i = 0; i < _numBoids; i++)
             {
-                var position = new Vector2(RandomStatic.NextSingle(0f, MainGame.ScreenWidth),
-                                           RandomStatic.NextSingle(0f, MainGame.ScreenHeight));
+                var position = new Vector2(RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.X),
+                                           RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.Y));
                 var boid = new Boid(position, this);
                 Add(boid);
             }
@@ -54,9 +54,9 @@ namespace Boids.Core.Entities
             return new List<Vector2>()
             {
                 new Vector2(boid.Position.X, 0),
-                new Vector2(boid.Position.X, MainGame.ScreenHeight),
+                new Vector2(boid.Position.X, MainGame.Options.Graphics.Resolution.Y),
                 new Vector2(0, boid.Position.Y),
-                new Vector2(MainGame.ScreenWidth, boid.Position.Y)
+                new Vector2(MainGame.Options.Graphics.Resolution.X, boid.Position.Y)
             };
         }
 

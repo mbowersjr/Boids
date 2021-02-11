@@ -1,4 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Boids.Core.Entities;
@@ -10,20 +15,27 @@ namespace Boids.Core
         GraphicsDeviceManager _graphics;
         SpriteBatch _spriteBatch;
 
-        public static int ScreenWidth = 1280;
-        public static int ScreenHeight = 720;
+        private PartitionGridRenderer _gridRenderer;
 
-        public static GridRenderer Grid { get; private set; }
+        public static PartitionGrid Grid { get; private set; }
 
         Flock _flock;
 
-        public MainGame()
+        private readonly ILogger<MainGame> _logger;
+        public static BoidsOptions Options { get; private set; }
+
+        public MainGame(BoidsOptions options, ILogger<MainGame> logger = null)
         {
+            _logger = logger ?? NullLogger<MainGame>.Instance;
+            Options = options;
+
+            _logger.LogInformation("Initializing graphics device. BackBuffer resolution: {X} x {Y} VSync: {VSync}", Options.Graphics.Resolution.X, Options.Graphics.Resolution.Y, Options.Graphics.VSync);
+
             _graphics = new GraphicsDeviceManager(this);
 
-            _graphics.PreferredBackBufferWidth = ScreenWidth;
-            _graphics.PreferredBackBufferHeight = ScreenHeight;
-            _graphics.SynchronizeWithVerticalRetrace = false;
+            _graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
+            _graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
+            _graphics.SynchronizeWithVerticalRetrace = Options.Graphics.VSync;
 
             this.IsMouseVisible = true;
 
@@ -31,14 +43,16 @@ namespace Boids.Core
 
             Content.RootDirectory = "Content";
 
-            Grid = new GridRenderer(GraphicsDevice, 32, 24);
+
+            _gridRenderer = new PartitionGridRenderer(GraphicsDevice, Options.PartitionGrid.CellsX, Options.PartitionGrid.CellsY);
+            Grid = _gridRenderer.Grid;
         }
 
         protected override void Initialize()
         {
             base.Initialize();
 
-            Grid.Initialize();
+            _gridRenderer.Initialize();
 
             _flock = new Flock();
         }
@@ -72,7 +86,7 @@ namespace Boids.Core
         {
             GraphicsDevice.Clear(Color.WhiteSmoke);
 
-            Grid.Draw();
+            _gridRenderer.Draw();
 
             _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
             _flock.Draw(_spriteBatch);

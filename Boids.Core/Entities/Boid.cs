@@ -27,8 +27,6 @@ namespace Boids.Core.Entities
             Position = position;
             Velocity = RandomStatic.NextUnitVector() * RandomStatic.NextSingle(1f, 2f);
 
-            Console.WriteLine($"Boid spawn: P: {Position.X},{Position.Y} V: {Velocity.X},{Velocity.Y}");
-
             _flock = flock;
         }
 
@@ -52,7 +50,7 @@ namespace Boids.Core.Entities
 
         public float GetRotationRad()
         {
-            return (float)Math.Atan2(Velocity.Y, Velocity.X) + MathHelper.PiOver2;
+            return MathF.Atan2(Velocity.Y, Velocity.X) + MathHelper.PiOver2;
         }
 
         public void Accelerate(Vector2 accel)
@@ -72,17 +70,17 @@ namespace Boids.Core.Entities
             }
 
             Position += Velocity;
-            CellPosition = _flock.Grid.GetCellPosition(Position);
+            CellPosition = MainGame.Grid.GetCellPosition(Position);
 
             Borders();
         }
 
         private void Borders()
         {
-            if (Position.X < 0 || Position.X > MainGame.ScreenWidth ||
-                Position.Y < 0 || Position.Y > MainGame.ScreenHeight)
+            if (Position.X < 0 || Position.X > MainGame.Options.Graphics.Resolution.X ||
+                Position.Y < 0 || Position.Y > MainGame.Options.Graphics.Resolution.Y)
             {
-                Position = new Vector2(MainGame.ScreenWidth / 2f, MainGame.ScreenHeight / 2f);
+                Position = new Vector2(MainGame.Options.Graphics.Resolution.X / 2f, MainGame.Options.Graphics.Resolution.Y / 2f);
             }
         }
     }
