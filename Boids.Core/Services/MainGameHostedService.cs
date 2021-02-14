@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Hosting;
 
@@ -34,21 +33,22 @@ namespace Boids.Core.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _appLifetime.ApplicationStarted.Register(async () =>
-            {
-                _logger.LogInformation("Application started");
+            _logger.LogDebug("Application starting");
 
+            _appLifetime.ApplicationStarted.Register(async () =>
+            {            
+                _logger.LogDebug("Application started");
+                
                 await Task.Run(() =>
                 {
-                    _logger.LogInformation("Creating new MainGame instance for lifetime of application");
-
                     using (var game = ActivatorUtilities.CreateInstance<MainGame>(_services))
                     {
                         game.Run();
                     }
-
+                
                     _appLifetime.StopApplication();
-                });
+                    
+                }, cancellationToken);
             });
 
             return Task.CompletedTask;
@@ -56,7 +56,7 @@ namespace Boids.Core.Services
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Exiting game ...");
+            _logger.LogDebug("Application stopped");
 
             return Task.CompletedTask;
         }

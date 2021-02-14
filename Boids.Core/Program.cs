@@ -9,43 +9,64 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Boids.Core.Services;
+using Boids.Core.Behaviors;
+using Boids.Core.Entities;
+using Microsoft.Extensions.Configuration.Json;
 
 namespace Boids.Core
 {
     public static class Program
     {
         [STAThread]
-        static void Main()
+        public static void Main()
         {
             CreateHostBuilder(Environment.GetCommandLineArgs())
                 .Build()
                 .Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
         {
-            var builder = Host.CreateDefaultBuilder(args);
+            var builder = Host.CreateDefaultBuilder(args).UseConsoleLifetime();
 
             builder.ConfigureServices((hostContext, services) =>
             {
-                services.AddLogging();
-                services.AddTransient<MainGame>();
+                services.AddSingleton<MainGame>();
+                services.AddTransient<IFlock, Flock>();
+                services.AddTransient<IFlockBehaviors, FlockBehaviors>();
+                services.AddTransient<PartitionGrid>();
+                services.AddTransient<PartitionGridRenderer>();
                 services.AddHostedService<MainGameHostedService>();
-
+                
                 services.Configure<BoidsOptions>(hostContext.Configuration.GetSection("Boids"));
             });
 
-            builder.ConfigureHostConfiguration(configHost =>
+            builder.ConfigureHostConfiguration(hostConfig =>
             {
-                configHost.SetBasePath(Directory.GetCurrentDirectory());
-                configHost.AddJsonFile("hostsettings.json", optional: true);
-                configHost.AddEnvironmentVariables(prefix: "BOIDS_");
-                configHost.AddCommandLine(args);
+                hostConfig.SetBasePath(Directory.GetCurrentDirectory());
+                hostConfig.AddJsonFile("hostsettings.json", optional: true);
+                hostConfig.AddEnvironmentVariables(prefix: "BOIDS_");
+                hostConfig.AddCommandLine(args);
             });
 
-            builder.ConfigureAppConfiguration((hostingContext, configuration) =>
+            builder.ConfigureAppConfiguration((hostingContext, appConfig) =>
             {
-                configuration
+                // appConfig.Sources.Clear();
+                // var appSettingsJson = new JsonConfigurationSource()
+                // {
+                //     Optional = true,
+                //     Path = "appsettings.json",
+                //     ReloadOnChange = true,
+                //     OnLoadException = context =>
+                //     {
+                //         context.Ignore = false;
+                //         throw new Exception("Could not load appsettings.json", context.Exception);
+                //     }
+                // };
+                //
+                // appConfig.Add(appSettingsJson);
+
+                appConfig
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                     .AddJsonFile($"appsettings.{GetAssemblyConfiguration()}.json", optional: true, reloadOnChange: true)
                     .AddCommandLine(args);
@@ -53,7 +74,14 @@ namespace Boids.Core
 
             builder.ConfigureLogging(logging =>
             {
+                logging.ClearProviders();
                 logging.SetMinimumLevel(LogLevel.Warning);
+
+                logging.AddSimpleConsole(configure =>
+                {
+                    configure.SingleLine = true;
+                    configure.IncludeScopes = true;
+                });
             });
 
             return builder;

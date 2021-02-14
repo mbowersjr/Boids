@@ -1,61 +1,51 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Boids.Core.Behaviors;
 
 namespace Boids.Core.Entities
 {
-    public class Flock
+    public interface IFlock
     {
-        private List<Boid> _boids;
-        private readonly FlockBehaviors _flockBehaviors;
+        List<Boid> Boids { get; }
+        IFlockBehaviors Behaviors { get; }
+        bool Paused { get; set; }
+        void ResetFlock();
+        void Draw(SpriteBatch spriteBatch);
+        void Update(float elapsedSeconds);
+    }
 
-        public PartitionGrid _grid;
+    public class Flock : IFlock
+    {
+        public List<Boid> Boids { get; private set; } = new List<Boid>();
+        public IFlockBehaviors Behaviors { get; private set; }
+        public bool Paused { get; set; }
 
-        public Flock()
+        public Flock(IFlockBehaviors behaviors)
         {
-            ResetFlock();
-
-            _flockBehaviors = new FlockBehaviors();
+            Behaviors = behaviors;
         }
 
         public void ResetFlock()
         {
-            _boids = new List<Boid>(MainGame.Options.Count);
+            Boids.Clear();
+            Behaviors.Reset();
 
             for (var i = 0; i < MainGame.Options.Count; i++)
             {
                 var boid = new Boid(this);
-                _boids.Add(boid);
-                ResetBoid(boid);
+                Boids.Add(boid);
+                boid.Reset();
             }
-        }
-
-        public void ResetBoid(Boid boid)
-        {
-            boid.IsActive = true;
-            boid.Position = new Vector2(RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.X),
-                                        RandomStatic.NextSingle(0f, MainGame.Options.Graphics.Resolution.Y));
-            boid.CellPosition = MainGame.Grid.GetCellPosition(boid.Position);
-            boid.Velocity = RandomStatic.NextUnitVector() * RandomStatic.NextSingle(1f, 2f);
-            boid.Acceleration = Vector2.Zero;
-        }
-
-        public void Add(Boid boid)
-        {
-            boid.IsActive = true;
-        }
-
-        public void Remove(Boid boid)
-        {
-            boid.IsActive = false;
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            foreach (Boid boid in _boids)
+            foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
                     continue;
@@ -64,51 +54,30 @@ namespace Boids.Core.Entities
             }
         }
 
-        private List<Vector2> GetBorderPoints(Boid boid)
+        public void Update(float elapsedSeconds)
         {
-            return new List<Vector2>()
-            {
-                new Vector2(boid.Position.X, 0),
-                new Vector2(boid.Position.X, MainGame.Options.Graphics.Resolution.Y),
-                new Vector2(0, boid.Position.Y),
-                new Vector2(MainGame.Options.Graphics.Resolution.X, boid.Position.Y)
-            };
-        }
-
-        public void Update()
-        {
-            foreach (Boid boid in _boids)
+            if (Paused)
+                return;
+            
+            foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
                     continue;
 
-                if (MainGame.Options.Behaviors.Avoidance)
+                foreach (var behavior in Behaviors.Behaviors)
                 {
-                    var avoidanceForce = _flockBehaviors.Avoidance.Avoidance(boid, _boids) * 1.5f;
-                    boid.Accelerate(avoidanceForce);
+                    if (!behavior.Enabled)
+                        continue;
+
+                    var force = behavior.Perform(boid, Boids);
+                    
+                    if (behavior.Coefficient != null)
+                        force *= behavior.Coefficient.Value;
+                    
+                    boid.ApplyForce(force);
                 }
 
-                if (MainGame.Options.Behaviors.AvoidPoints)
-                {
-                    var avoidPointsForce = _flockBehaviors.AvoidPoints.AvoidPoints(boid, GetBorderPoints(boid)) * 5f;
-                    boid.Accelerate(avoidPointsForce);
-                }
-
-                if (MainGame.Options.Behaviors.Alignment)
-                {
-                    var alignmentForce = _flockBehaviors.Alignment.Alignment(boid, _boids) / 1.5f;
-                    boid.Accelerate(alignmentForce);
-                }
-
-                if (MainGame.Options.Behaviors.Cohesion)
-                {
-                    var cohesionForce = _flockBehaviors.Cohesion.Cohesion(boid, _boids) / 3f;
-                    boid.Accelerate(cohesionForce);
-                }
-
-                boid.Accelerate(boid.Velocity / 7f);
-
-                boid.Run();
+                boid.Update(elapsedSeconds);
             }
         }
     }

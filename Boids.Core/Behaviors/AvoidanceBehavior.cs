@@ -6,15 +6,19 @@ using Boids.Core;
 
 namespace Boids.Core.Behaviors
 {
-    public class AvoidanceBehavior
+    public class AvoidanceBehavior : IBehavior
     {
-        public Vector2 Avoidance(Boid boid, List<Boid> boids)
+        public string Name => "Avoidance";
+        public bool Enabled { get; set; }
+        public float? Coefficient { get; set; }
+        public float? Radius { get; set; }
+        
+        public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
-            var radius = 25;
-            var avoid = new Vector2();
+            var force = new Vector2();
             var count = 0;
 
-            foreach (Boid other in boids)
+            foreach (var other in boids)
             {
                 if (other == boid)
                     continue;
@@ -30,28 +34,23 @@ namespace Boids.Core.Behaviors
                 var direction = boid.Position - other.Position;
                 var distance = direction.Length();
 
-                if (distance < radius && distance > 0f)
+                if (distance > 0f && distance < Radius)
                 {
-                    avoid += direction / MathF.Pow(distance, 2f);
+                    force += direction / (distance * distance);
                     count++;
                 }
             }
 
-            if (count != 0)
-            {
-                avoid /= count;
-            }
+            if (count > 0)
+                force /= count;
 
-            if (avoid.Length() > 0f)
+            var adjustmentDirection = Vector2.Zero;
+            if (force.LengthSquared() > 0f)
             {
-                avoid.Normalize();
+                adjustmentDirection = Vector2.Normalize(force);
             }
-            else
-            {
-                avoid = Vector2.Zero;
-            }
-
-            return avoid;
+            
+            return adjustmentDirection;
         }
     }
 }

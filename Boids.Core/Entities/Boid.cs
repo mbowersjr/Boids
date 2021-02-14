@@ -1,30 +1,73 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Boids.Core;
+using MonoGame.Extended;
 
 namespace Boids.Core.Entities
 {
     public class Boid
     {
-        private static Random _rand = new Random();
+        private static Texture2D _boidSprite;
+        public static Texture2D BoidSprite
+        {
+            get => _boidSprite;
+            set
+            {
+                _boidSprite = value;
+                BoidSpriteOrigin = new Vector2(_boidSprite.Width / 2f, _boidSprite.Height / 2f);
+            }
+        }
 
-        public static Texture2D BoidSprite;
-        private static Vector2 _boidSpriteOrigin = new Vector2(5f,5f);
+        private static Vector2 _boidSpriteOrigin;
+        private static Vector2 BoidSpriteOrigin { get => _boidSpriteOrigin; set => _boidSpriteOrigin = value; }
 
-        private const int Speed = 5;
-        private const int TurnSpeed = 30 / Speed;
+        private const float MinSpawnVelocity = 2f;
+        private const float MaxSpawnVelocity = 10f;
+        private const float MaxVelocity = 15f;
+        private const float TurningVelocity = 10f;
 
         private Vector2 _position;
-        public Vector2 Position { get => _position; set => _position = value; }
+        public Vector2 Position
+        {
+            get => _position;
+            set
+            {
+                if (float.IsNaN(value.X) || float.IsNaN(value.Y))
+                    throw new Exception("Attempted to set Position as invalid float.NaN");
+                _position = value;
+            }
+        }
+
+        private float _rotation;
+        private float Rotation { get => _rotation; set => _rotation = value; }
 
         private Vector2 _cellPosition;
-        public Vector2 CellPosition { get => _cellPosition; set => _cellPosition = value; }
+        public Vector2 CellPosition { get => _cellPosition; private set => _cellPosition = value; }
 
         private Vector2 _velocity;
-        public Vector2 Velocity { get => _velocity; set => _velocity = value; }
+        public Vector2 Velocity 
+        { 
+            get => _velocity; 
+            set
+            {
+                if (float.IsNaN(value.X) || float.IsNaN(value.Y))
+                    throw new Exception("Attempted to set Velocity as invalid float.NaN");
+                _velocity = value;
+            } 
+        }
 
         private Vector2 _acceleration;
-        public Vector2 Acceleration { get => _acceleration; set => _acceleration = value; }
+        public Vector2 Acceleration
+        {
+            get => _acceleration;
+            set
+            {
+                if (float.IsNaN(value.X) || float.IsNaN(value.Y))
+                    throw new Exception("Attempted to set Acceleration as invalid float.NaN");
+                _acceleration = value;
+            }
+        }
 
         public bool IsActive { get; set; }
 
@@ -35,63 +78,62 @@ namespace Boids.Core.Entities
             _flock = flock;
         }
 
+        private Vector2 GetMovementLineEndPoint()
+        {
+            return Position + Vector2.Normalize(Velocity) * Acceleration;
+        }
+
         public void Draw(SpriteBatch sb)
         {
             sb.Draw(texture: BoidSprite,
                     position: Position,
                     sourceRectangle: null,
                     color: Color.White,
-                    rotation: GetRotationRad(),
-                    origin: _boidSpriteOrigin,
-                    scale: Vector2.One,
+                    rotation: Rotation,
+                    origin: BoidSpriteOrigin,
+                    scale: 1f,
                     effects: SpriteEffects.None,
                     layerDepth: 0f);
 
             sb.DrawLine(point1: Position,
-                        point2: Position + Vector2.Normalize(Velocity) * 10f,
+                        point2: GetMovementLineEndPoint(),
                         color: Color.Red,
-                        thickness: 2);
+                        thickness: 2f,
+                        layerDepth: 0f);
         }
 
-        public float GetRotationRad()
+        public void ApplyForce(Vector2 force)
         {
-            return MathF.Atan2(Velocity.Y, Velocity.X) + MathHelper.PiOver2;
+            Acceleration += force;
         }
 
-        public void Accelerate(Vector2 accel)
+        public void Reset()
         {
-            if (!IsActive)
-                return;
-
-            Acceleration += accel / TurnSpeed;
-        }
-
-        public void Run()
-        {
-            if (!IsActive)
-                return;
-
-            Velocity += Acceleration;
+            IsActive = true;
+            Position = new Vector2(MainGame.Random.NextSingle(0f, MainGame.Options.Graphics.Resolution.X),
+                                   MainGame.Random.NextSingle(0f, MainGame.Options.Graphics.Resolution.Y));
+            MainGame.Random.NextUnitVector(out _velocity);
+            _velocity *= MainGame.Random.NextSingle(MinSpawnVelocity, MaxSpawnVelocity);
+            Rotation = Velocity.ToRadians() - MathHelper.PiOver2;
             Acceleration = Vector2.Zero;
-
-            if (Math.Abs(Velocity.Length()) > Speed)
-            {
-                Velocity.Normalize();
-                Velocity *= Speed;
-            }
-
-            _position += Velocity;
-            MainGame.Grid.GetCellPosition(ref _position, out _cellPosition);
-
-            Borders();
         }
-
-        private void Borders()
+        
+        public void Update(float elapsedSeconds)
         {
-            if (Position.X < 0 || Position.X > MainGame.Options.Graphics.Resolution.X ||
-                Position.Y < 0 || Position.Y > MainGame.Options.Graphics.Resolution.Y)
+            if (!IsActive)
+                return;
+
+            Velocity += Acceleration * elapsedSeconds;
+            Acceleration = Vector2.Zero;
+            Velocity.Truncate(MaxVelocity);
+            Rotation = Velocity.ToRadians() ;
+            Position += Velocity * elapsedSeconds;
+            CellPosition = MainGame.Grid.GetCellPosition(this);
+
+            if (Position.X < 0f || Position.X > MainGame.Options.Graphics.Resolution.X ||
+                Position.Y < 0f || Position.Y > MainGame.Options.Graphics.Resolution.Y)
             {
-                _position = new Vector2(MainGame.Options.Graphics.Resolution.X / 2f, MainGame.Options.Graphics.Resolution.Y / 2f);
+                Reset();
             }
         }
     }

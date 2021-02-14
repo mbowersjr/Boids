@@ -1,23 +1,25 @@
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework;
+using Boids.Core;
 
 namespace Boids.Core
 {
     public class BoidsOptions
     {
         public int Count { get; set; }
-        public BehaviorsOptions Behaviors { get; set; }
+        public List<BehaviorOptions> Behaviors { get; set; }
         public PartitionGridOptions PartitionGrid { get; set; }
         public GraphicsOptions Graphics { get; set; }
     }
 
-    public class BehaviorsOptions
+    public class BehaviorOptions
     {
-        public bool Avoidance { get; set; }
-        public bool AvoidPoints { get; set; }
-        public bool Alignment { get; set; }
-        public bool Cohesion { get; set; }
+        public string Name { get; set; }
+        public bool Enabled { get; set; }
+        public float? Coefficient { get; set; }
+        public float? Radius { get; set; }
     }
 
     public class GraphicsOptions
@@ -37,6 +39,21 @@ namespace Boids.Core
         public int CellsX { get; set; }
         public int CellsY { get; set; }
         public bool Visible { get; set; }
+        public bool LinesVisible { get; set; }
+        public bool HighlightActiveCells { get; set; }
+        public Microsoft.Xna.Framework.Color CellHighlightColor { get; set; }
+        public Microsoft.Xna.Framework.Color LineColor { get; set; }
+
+        private string _cellHighlightColorName;
+        public string CellHighlightColorName
+        {
+            get => _cellHighlightColorName;
+            set
+            {
+                _cellHighlightColorName = value;
+                CellHighlightColor = GetColorFromColorName(_cellHighlightColorName);
+            }
+        }
 
         private string _lineColorName;
         public string LineColorName
@@ -45,16 +62,20 @@ namespace Boids.Core
             set
             {
                 _lineColorName = value;
-
-                var clrColor = System.Drawing.Color.FromName(_lineColorName);
-
-                if (clrColor == default(System.Drawing.Color))
-                    clrColor = System.Drawing.Color.DodgerBlue;
-
-                LineColor = new Microsoft.Xna.Framework.Color(clrColor.R, clrColor.G, clrColor.B, clrColor.A);
+                LineColor = GetColorFromColorName(_lineColorName);
             }
         }
 
-        public Microsoft.Xna.Framework.Color LineColor { get; set; }
+        private static Microsoft.Xna.Framework.Color GetColorFromColorName(string colorName)
+        {
+            var color = System.Drawing.Color.FromName(colorName);
+
+            if (color == default(System.Drawing.Color))
+            {
+                color = System.Drawing.Color.DodgerBlue;
+            }
+
+            return color.ToXnaColor();
+        }
     }
 }

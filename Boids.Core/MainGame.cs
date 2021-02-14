@@ -1,4 +1,6 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -6,65 +8,86 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
 using Boids.Core.Entities;
+using Boids.Core.Services;
 
 namespace Boids.Core
 {
     public class MainGame : Game
     {
-        GraphicsDeviceManager _graphics;
         SpriteBatch _spriteBatch;
-
-        private PartitionGridRenderer _gridRenderer;
-
-        public static PartitionGrid Grid { get; private set; }
-
-        private Flock _flock;
-
+        public static GraphicsDeviceManager Graphics { get; private set; }
+        
+        public static PartitionGrid Grid => _partitionGrid;
+        private static PartitionGrid _partitionGrid;
+        
+        private readonly IFlock _flock;
         private readonly ILogger<MainGame> _logger;
-        private readonly IOptionsMonitor<BoidsOptions> _optionsMonitor;
-        public static BoidsOptions Options { get; private set; }
-
-        public MainGame(IOptionsMonitor<BoidsOptions> optionsMonitor = null, ILogger<MainGame> logger = null)
+        private IOptionsMonitor<BoidsOptions> _optionsMonitor;
+        private readonly IServiceProvider _services;
+        public static BoidsOptions Options { get; set; }
+        public static FastRandom Random { get; private set; } = new FastRandom();
+        
+        public MainGame(IFlock flock, PartitionGrid partitionGrid, IOptionsMonitor<BoidsOptions> optionsMonitor, IServiceProvider services, ILogger<MainGame> logger)
         {
-            _logger = logger ?? NullLogger<MainGame>.Instance;
+            _partitionGrid = partitionGrid;
+            _flock = flock;
             _optionsMonitor = optionsMonitor;
+            _services = services;
+            _logger = logger;
 
             Options = _optionsMonitor.CurrentValue;
-
             _optionsMonitor.OnChange(options =>
             {
                 Options = options;
-
+                
+                _partitionGrid.Initialize();
                 _flock.ResetFlock();
             });
+            
+            _logger.LogDebug("Applying graphics settings: {X} x {Y} VSync: {VSync}",
+                Options.Graphics.Resolution.X, Options.Graphics.Resolution.Y, Options.Graphics.VSync);
 
-            _logger.LogInformation("Initializing graphics device. BackBuffer resolution: {X} x {Y} VSync: {VSync}", Options.Graphics.Resolution.X, Options.Graphics.Resolution.Y, Options.Graphics.VSync);
-
-            _graphics = new GraphicsDeviceManager(this);
-
-            _graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
-            _graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
-            _graphics.SynchronizeWithVerticalRetrace = Options.Graphics.VSync;
-
-            this.IsMouseVisible = true;
-
-            _graphics.ApplyChanges();
-
+            IsMouseVisible = true;
             Content.RootDirectory = "Content";
-
-
-            _gridRenderer = new PartitionGridRenderer(GraphicsDevice);
-            Grid = _gridRenderer.Grid;
+            
+            Graphics = new GraphicsDeviceManager(this);
+            Graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
+            Graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
+            Graphics.SynchronizeWithVerticalRetrace = Options.Graphics.VSync;
+            Graphics.PreferMultiSampling = true;
+            Graphics.ApplyChanges();
         }
 
         protected override void Initialize()
         {
             base.Initialize();
+            
+            Graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
+            Graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
+            Graphics.ApplyChanges();
 
-            _gridRenderer.Initialize();
+            CenterWindow();
+            
+            _partitionGrid.Initialize();
+            _flock.ResetFlock();
 
-            _flock = new Flock();
+            _flock.Paused = false;
+        }
+        
+        private void CenterWindow()
+        {
+            var displayMode = Graphics.GraphicsDevice.DisplayMode;
+            
+            // Screen center
+            var position = new Point(displayMode.Width / 2, displayMode.Height / 2);
+            
+            // Offset half window size
+            position.X -= Window.ClientBounds.Width / 2;
+            position.Y -= Window.ClientBounds.Height / 2;
+
+            Window.Position = position;
         }
 
         protected override void LoadContent()
@@ -87,18 +110,24 @@ namespace Boids.Core
                 Exit();
             }
 
-            base.Update(gameTime);
+            if (keyboardState.IsKeyDown(Keys.P)) 
+                _flock.Paused = !_flock.Paused;
 
-            _flock.Update();
+            var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+            _flock.Update(elapsedSeconds);
+            _partitionGrid.UpdateActiveCells(_flock.Boids);
+            
+            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.WhiteSmoke);
 
-            _gridRenderer.Draw();
+            _partitionGrid.Draw(gameTime);
 
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+            _spriteBatch.Begin(samplerState: SamplerState.PointClamp, sortMode: SpriteSortMode.Immediate);
             _flock.Draw(_spriteBatch);
             _spriteBatch.End();
 

@@ -6,15 +6,19 @@ using Boids.Core;
 
 namespace Boids.Core.Behaviors
 {
-    public class CohesionBehavior
+    public class CohesionBehavior : IBehavior
     {
-        public Vector2 Cohesion(Boid boid, List<Boid> boids)
+        public string Name => "Cohesion";
+        public bool Enabled { get; set; }
+        public float? Coefficient { get; set; }
+        public float? Radius { get; set; }
+        
+        public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
-            var radius = 100;
-            var cohere = new Vector2();
+            var force = new Vector2();
             var count = 0;
 
-            foreach (Boid other in boids)
+            foreach (var other in boids)
             {
                 if (other == boid)
                     continue;
@@ -28,19 +32,25 @@ namespace Boids.Core.Behaviors
 
                 // Position distance
                 var distance = Vector2.Distance(boid.Position, other.Position);
-                if (distance < radius && distance > 0f)
+                if (distance < Radius && distance > 0f)
                 {
-                    cohere += other.Position;
+                    force += other.Position;
                     count++;
                 }
             }
 
             if (count != 0)
             {
-                cohere /= count;
+                force /= count;
             }
 
-            return Vector2.Normalize(cohere - boid.Position);
+            var adjustmentDirection = force - boid.Position;
+            if (adjustmentDirection.LengthSquared() > 0f)
+            {
+                adjustmentDirection.Normalize();
+            }
+            
+            return adjustmentDirection;
         }
     }
 }
