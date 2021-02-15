@@ -11,12 +11,14 @@ using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
 using Boids.Core.Entities;
 using Boids.Core.Services;
+using Boids.Core.Configuration;
 
 namespace Boids.Core
 {
     public class MainGame : Game
     {
-        SpriteBatch _spriteBatch;
+        private SpriteFont _spriteFont;
+        private SpriteBatch _spriteBatch;
         public static GraphicsDeviceManager Graphics { get; private set; }
         
         public static PartitionGrid Grid => _partitionGrid;
@@ -93,8 +95,9 @@ namespace Boids.Core
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            Boid.BoidSprite = Content.Load<Texture2D>("Images/Boid");
+            
+            _spriteFont = Content.Load<SpriteFont>("Fonts/FixedWidth");
+            Boid.BoidSprite = Content.Load<Texture2D>("Images/Boid_32x32");
         }
 
         protected override void UnloadContent()
@@ -105,13 +108,15 @@ namespace Boids.Core
         protected override void Update(GameTime gameTime)
         {
             var keyboardState = Keyboard.GetState();
+            
             if (keyboardState.IsKeyDown(Keys.Escape) || keyboardState.IsKeyDown(Keys.Q))
-            {
                 Exit();
-            }
 
             if (keyboardState.IsKeyDown(Keys.P)) 
                 _flock.Paused = !_flock.Paused;
+            
+            if (keyboardState.IsKeyDown(Keys.R)) 
+                _flock.ResetFlock();
 
             var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
@@ -127,10 +132,8 @@ namespace Boids.Core
 
             _partitionGrid.Draw(gameTime);
 
-            _spriteBatch.Begin(samplerState: SamplerState.PointClamp, sortMode: SpriteSortMode.Immediate);
-            _flock.Draw(_spriteBatch);
-            _spriteBatch.End();
-
+            _flock.Draw(_spriteBatch, _spriteFont);
+            
             base.Draw(gameTime);
         }
     }

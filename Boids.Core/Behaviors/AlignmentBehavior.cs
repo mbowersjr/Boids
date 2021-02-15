@@ -27,7 +27,7 @@ namespace Boids.Core.Behaviors
                     continue;
 
                 // Cell position distance
-                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 1f)
+                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 2f)
                     continue;
 
                 // Position distance
@@ -40,17 +40,9 @@ namespace Boids.Core.Behaviors
             }
 
             if (count > 0)
-            {
                 force /= count;
-            }
 
-            var adjustmentDirection = force - boid.Velocity;
-            if (adjustmentDirection.LengthSquared() > 0f)
-            {
-                adjustmentDirection.Normalize();
-            }
-            
-            return adjustmentDirection;
+            return force.Length() > 0f ? force : Vector2.Zero;
         }
     }
 }

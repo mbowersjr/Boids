@@ -1,39 +1,6 @@
-using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using Microsoft.Xna.Framework;
-using Boids.Core;
-
-namespace Boids.Core
+﻿namespace Boids.Core.Configuration
 {
-    public class BoidsOptions
-    {
-        public int Count { get; set; }
-        public List<BehaviorOptions> Behaviors { get; set; }
-        public PartitionGridOptions PartitionGrid { get; set; }
-        public GraphicsOptions Graphics { get; set; }
-    }
-
-    public class BehaviorOptions
-    {
-        public string Name { get; set; }
-        public bool Enabled { get; set; }
-        public float? Coefficient { get; set; }
-        public float? Radius { get; set; }
-    }
-
-    public class GraphicsOptions
-    {
-        public ResolutionOptions Resolution { get; set; }
-        public bool VSync { get; set; }
-    }
-
-    public class ResolutionOptions
-    {
-        public int X { get; set; }
-        public int Y { get; set; }
-    }
-
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class PartitionGridOptions
     {
         public int CellsX { get; set; }

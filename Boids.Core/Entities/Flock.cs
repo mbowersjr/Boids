@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Boids.Core.Behaviors;
+using MonoGame.Extended;
 
 namespace Boids.Core.Entities
 {
@@ -15,7 +16,7 @@ namespace Boids.Core.Entities
         IFlockBehaviors Behaviors { get; }
         bool Paused { get; set; }
         void ResetFlock();
-        void Draw(SpriteBatch spriteBatch);
+        void Draw(SpriteBatch spriteBatch, SpriteFont spriteFont);
         void Update(float elapsedSeconds);
     }
 
@@ -43,14 +44,14 @@ namespace Boids.Core.Entities
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public void Draw(SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
                     continue;
 
-                boid.Draw(spriteBatch);
+                boid.Draw(spriteBatch, spriteFont);
             }
         }
 
@@ -73,9 +74,11 @@ namespace Boids.Core.Entities
                     
                     if (behavior.Coefficient != null)
                         force *= behavior.Coefficient.Value;
-                    
-                    boid.ApplyForce(force);
+
+                    boid.Acceleration += force;
                 }
+
+                boid.Acceleration.Truncate(Boid.MaxForce);
 
                 boid.Update(elapsedSeconds);
             }

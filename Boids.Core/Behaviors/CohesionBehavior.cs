@@ -27,30 +27,24 @@ namespace Boids.Core.Behaviors
                     continue;
 
                 // Cell position distance
-                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 1f)
+                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 2f)
                     continue;
 
                 // Position distance
-                var distance = Vector2.Distance(boid.Position, other.Position);
-                if (distance < Radius && distance > 0f)
+                var direction = other.Position - boid.Position;
+                var distance = direction.Length();
+                
+                if (distance > 0f && distance < Radius)
                 {
-                    force += other.Position;
+                    force += direction; //other.Position;
                     count++;
                 }
             }
 
-            if (count != 0)
-            {
+            if (count > 0)
                 force /= count;
-            }
 
-            var adjustmentDirection = force - boid.Position;
-            if (adjustmentDirection.LengthSquared() > 0f)
-            {
-                adjustmentDirection.Normalize();
-            }
-            
-            return adjustmentDirection;
+            return force.Length() > 0f ? force : Vector2.Zero;
         }
     }
 }

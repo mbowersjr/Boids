@@ -14,6 +14,7 @@ namespace Boids.Core.Behaviors
         List<IBehavior> Behaviors { get; }
         void LoadBehaviors();
         void Reset();
+        IBehavior GetBehavior(string name);
     }
 
     public class FlockBehaviors : IFlockBehaviors
@@ -33,6 +34,11 @@ namespace Boids.Core.Behaviors
             LoadBehaviors();
         }
 
+        public IBehavior GetBehavior(string name)
+        {
+            return Behaviors.FirstOrDefault(b => b.Name.EqualsIgnoreCase(name));
+        }
+        
         public void LoadBehaviors()
         {
             _logger.LogInformation("Loading behaviors ...");

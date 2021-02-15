@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Boids.Core.Services;
 using Boids.Core.Behaviors;
 using Boids.Core.Entities;
-using Microsoft.Extensions.Configuration.Json;
+using Boids.Core.Configuration;
 
 namespace Boids.Core
 {
