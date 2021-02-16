@@ -36,7 +36,7 @@ namespace Boids.Core.Behaviors
 
                 if (distance > 0f && distance < Radius)
                 {
-                    force += direction / (distance * distance);
+                    force += direction / (1f / distance);
                     count++;
                 }
             }
