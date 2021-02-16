@@ -16,5 +16,6 @@ namespace Boids.Core.Configuration
         public List<BehaviorOptions> Behaviors { get; set; }
         public PartitionGridOptions PartitionGrid { get; set; }
         public GraphicsOptions Graphics { get; set; }
+        public ThemeOptions Theme { get; set; }
     }
 }

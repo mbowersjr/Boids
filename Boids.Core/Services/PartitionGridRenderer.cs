@@ -105,7 +105,7 @@ namespace Boids.Core.Services
             {
                 for (var i = 0; i < _gridPoints.Length; i++)
                 {
-                    _primitiveDrawing.DrawSegment(_gridPoints[i].Item1, _gridPoints[i].Item2, MainGame.Options.PartitionGrid.LineColor);
+                    _primitiveDrawing.DrawSegment(_gridPoints[i].Item1, _gridPoints[i].Item2, MainGame.Options.Theme.PartitionGridLineColor.Value);
                 }
             }
 
@@ -120,7 +120,7 @@ namespace Boids.Core.Services
                             _primitiveDrawing.DrawSolidRectangle(_cells[x, y].Bounds.Position,
                                                                  _cells[x, y].Bounds.Width,
                                                                  _cells[x, y].Bounds.Height,
-                                                                 MainGame.Options.PartitionGrid.CellHighlightColor);
+                                                                 MainGame.Options.Theme.PartitionGridHighlightColor.Value);
                         }
                     }
                 }

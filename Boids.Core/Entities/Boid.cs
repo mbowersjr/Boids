@@ -23,10 +23,10 @@ namespace Boids.Core.Entities
 
         private static Vector2 _boidSpriteOrigin;
         
-        public const float MinSpawnVelocity = 5f;
-        public const float MaxSpawnVelocity = 20f;
-        public const float MaxVelocity = 30f;
-        public const float MaxForce = 5f;
+        public const float MinSpawnVelocity = 1f;
+        public const float MaxSpawnVelocity = 5f;
+        public const float MaxVelocity = 5f;
+        public const float MaxForce = 10f;
 
         private Vector2 _position;
         public Vector2 Position
@@ -64,11 +64,6 @@ namespace Boids.Core.Entities
             _flock = flock;
         }
 
-        private readonly Color _boidColor = new Color(Color.DarkGray, 1f);
-        private readonly Color _avoidedPointLineColor = new Color(Color.Orange, 0.5f);
-        private readonly Color _boidPropertiesTextColor = new Color(Color.Black, 0.5f);
-        private readonly Color _boidDirectionLineColor = new Color(Color.Red, 0.75f);
-
         public void Draw(SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.NonPremultiplied, sortMode: SpriteSortMode.Immediate);
@@ -102,15 +97,15 @@ namespace Boids.Core.Entities
             
             spriteBatch.DrawCircle(center: Position, 
                                    radius: 10f, 
-                                   sides: 90, 
-                                   color: _boidColor, 
+                                   sides: 32, 
+                                   color: MainGame.Options.Theme.BoidColor.Value, 
                                    thickness: 2f, 
                                    layerDepth: 0f);
 
             spriteBatch.DrawLine(point: Position,
                                  angle: Rotation,
                                  length: 30f,
-                                 color: _boidDirectionLineColor,
+                                 color: MainGame.Options.Theme.BoidDirectionLineColor.Value,
                                  thickness: 2f,
                                  layerDepth: 0f);
         }
@@ -127,11 +122,10 @@ namespace Boids.Core.Entities
                 var direction = Position - point;
                 var distance = direction.Length();
 
-                var lineColor = _avoidedPointLineColor;
+                var lineColor = MainGame.Options.Theme.AvoidedPointLineColor.Value;
                 if (distance > 0f && distance < _avoidPointsBehavior.Radius)
                 {
-                    // More prominent line for avoided points within active range
-                    lineColor = new Color(Color.Red, 0.75f);
+                    lineColor = MainGame.Options.Theme.AvoidedPointActiveLineColor.Value;
                 }
                 
                 spriteBatch.DrawLine(point1: Position,
@@ -156,7 +150,7 @@ namespace Boids.Core.Entities
             spriteBatch.DrawString(spriteFont: spriteFont,
                                    text: _sb,
                                    position: textPosition,
-                                   color: _boidPropertiesTextColor);
+                                   color: MainGame.Options.Theme.BoidPropertiesTextColor.Value);
         }
 
         public void Reset()
@@ -180,7 +174,7 @@ namespace Boids.Core.Entities
             if (!IsActive)
                 return;
 
-            Velocity += Acceleration * elapsedSeconds;
+            Velocity += Acceleration.Truncate(Boid.MaxForce) * elapsedSeconds;
             Acceleration = Vector2.Zero;
             Velocity.Truncate(Boid.MaxVelocity);
             Rotation = Velocity.ToRadians();

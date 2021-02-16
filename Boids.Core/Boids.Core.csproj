@@ -5,39 +5,23 @@
     <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Boids.Core</AssemblyName>
     <RootNamespace>Boids.Core</RootNamespace>
-    <PublishReadyToRun>false</PublishReadyToRun>
     <TieredCompilation>false</TieredCompilation>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <StartupObject>Boids.Core.Program</StartupObject>
-  </PropertyGroup>
-  
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>  
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <DefaultItemExcludes>$(DefaultItemExcludes);Content\bin\**;Content\obj\**</DefaultItemExcludes>
-  </PropertyGroup>
-  
+  </PropertyGroup>  
   <ItemGroup>
     <None Remove="Icon.ico" />
     <None Remove="Icon.bmp" />
-    <None Remove="Content\Content.mgcb" />    
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icon.ico" />
     <EmbeddedResource Include="Icon.bmp" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="$(NuGetPackageRoot)monogame.extended\3.8.0\contentFiles\**\*" />
-    <Content Include="$(NuGetPackageRoot)monogame.extended\3.8.0\contentFiles\**\*">
-      <LinkBase>External</LinkBase>
-      <Link>%(LinkBase)\%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  
   <ItemGroup>
     <None Update="appSettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -51,11 +35,6 @@
       <DependentUpon>appSettings.json</DependentUpon>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <MonoGameContentReference Include="**\*.mgcb" />
-  </ItemGroup>  
-  
   <ItemGroup>
     <TrimmerRootAssembly Include="Microsoft.Xna.Framework.Content.ContentTypeReader" Visible="false" />
   </ItemGroup>
@@ -67,5 +46,5 @@
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20574.7" />
   </ItemGroup>
-
+  
 </Project>

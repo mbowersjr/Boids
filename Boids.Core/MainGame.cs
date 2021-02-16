@@ -128,6 +128,7 @@ namespace Boids.Core
 
         protected override void Draw(GameTime gameTime)
         {
+            
             GraphicsDevice.Clear(Color.WhiteSmoke);
 
             _partitionGrid.Draw(gameTime);
