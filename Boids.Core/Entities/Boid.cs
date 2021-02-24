@@ -17,15 +17,15 @@ namespace Boids.Core.Entities
             set
             {
                 _boidSprite = value;
-                _boidSpriteOrigin = new Vector2(_boidSprite.Width / 2f, _boidSprite.Height / 2f);
+                //_boidSpriteOrigin = new Vector2(_boidSprite.Width / 2f, _boidSprite.Height / 2f);
             }
         }
 
-        private static Vector2 _boidSpriteOrigin;
         
-        public const float MinSpawnVelocity = 1f;
-        public const float MaxSpawnVelocity = 5f;
-        public const float MaxVelocity = 5f;
+        
+        public const float MinSpawnVelocity = 3f;
+        public const float MaxSpawnVelocity = 10f;
+        public const float MaxVelocity = 10f;
         public const float MaxForce = 10f;
 
         private Vector2 _position;
@@ -64,7 +64,7 @@ namespace Boids.Core.Entities
             _flock = flock;
         }
 
-        public void Draw(SpriteBatch spriteBatch, SpriteFont spriteFont)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.NonPremultiplied, sortMode: SpriteSortMode.Immediate);
             
@@ -75,9 +75,9 @@ namespace Boids.Core.Entities
                 DrawAvoidedPointLines(spriteBatch);
             }
 
-            if (MainGame.Options.DisplayBoidProperties)
+            if (MainGame.Options.DisplayBoidPropertiesText)
             {
-                DrawBoidProperties(spriteBatch, spriteFont);
+                DrawBoidPropertiesText(spriteBatch, spriteFont);
             }
 
             spriteBatch.End();
@@ -110,34 +110,38 @@ namespace Boids.Core.Entities
                                  layerDepth: 0f);
         }
 
-        private IBehavior _avoidPointsBehavior = null;
+        private IBehavior _avoidPointsBehavior;
         private void DrawAvoidedPointLines(SpriteBatch spriteBatch)
         {
             _avoidPointsBehavior ??= _flock.Behaviors.GetBehavior("AvoidPoints");
             
-            var avoidedPoints = AvoidPointsBehavior.GetNearestBoundsPoints(this);
+            Vector2[]  avoidedPoints = new Vector2[3];
+            AvoidPointsBehavior.UpdateNearestAvoidedPoints(this, ref avoidedPoints);
             
             foreach (var point in avoidedPoints)
             {
                 var direction = Position - point;
                 var distance = direction.Length();
 
-                var lineColor = MainGame.Options.Theme.AvoidedPointLineColor.Value;
-                if (distance > 0f && distance < _avoidPointsBehavior.Radius)
-                {
-                    lineColor = MainGame.Options.Theme.AvoidedPointActiveLineColor.Value;
-                }
+                var pointIsActive = distance > 0f && distance < _avoidPointsBehavior.Radius;
                 
-                spriteBatch.DrawLine(point1: Position,
-                                     point2: point,
-                                     color: lineColor,
-                                     thickness: 1f,
-                                     layerDepth: 0f);
+                var lineColor = pointIsActive 
+                    ? MainGame.Options.Theme.AvoidedPointActiveLineColor.Value 
+                    : MainGame.Options.Theme.AvoidedPointLineColor.Value;
+
+                if (pointIsActive && MainGame.Options.DisplayAvoidedPointLines)
+                {
+                    spriteBatch.DrawLine(point1: Position,
+                                         point2: point,
+                                         color: lineColor,
+                                         thickness: 1f,
+                                         layerDepth: 0f);    
+                }
             }
         }
         
         private readonly StringBuilder _sb = new StringBuilder();
-        private void DrawBoidProperties(SpriteBatch spriteBatch, SpriteFont spriteFont)
+        private void DrawBoidPropertiesText(SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             _sb.Clear();
             _sb.AppendFormat("P: {0:N3}, {1:N3}\n", Position.X, Position.Y);

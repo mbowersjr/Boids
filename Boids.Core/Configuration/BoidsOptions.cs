@@ -11,7 +11,9 @@ namespace Boids.Core.Configuration
     {
         public int Count { get; set; }
         public bool DisplayAvoidedPointLines { get; set; }
-        public bool DisplayBoidProperties { get; set; }
+        public bool DisplayAvoidedPointActiveLines { get; set; }
+        public bool DisplayBoidPropertiesText { get; set; }
+        public bool DisplayDebugData { get; set; }
         
         public List<BehaviorOptions> Behaviors { get; set; }
         public PartitionGridOptions PartitionGrid { get; set; }

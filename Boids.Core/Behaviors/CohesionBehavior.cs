@@ -6,6 +6,7 @@ using Boids.Core;
 
 namespace Boids.Core.Behaviors
 {
+    // ReSharper disable once UnusedType.Global
     public class CohesionBehavior : IBehavior
     {
         public string Name => "Cohesion";

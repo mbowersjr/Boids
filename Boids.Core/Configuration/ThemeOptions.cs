@@ -30,11 +30,10 @@ namespace Boids.Core.Configuration
         public string BoidDirectionLine { get; set; }
         public Lazy<Color> BoidDirectionLineColor => new Lazy<Color>(() => ConvertToColor(BoidDirectionLine));
 
-        private static Microsoft.Xna.Framework.Color ConvertToColor(string optionsValue)
+        private static Color ConvertToColor(string optionsValue)
         {
             string hex;
             float alpha = 1f;
-            Microsoft.Xna.Framework.Color color;
             
             if (optionsValue.IndexOf(',', StringComparison.OrdinalIgnoreCase) < 0)
             {
@@ -47,7 +46,7 @@ namespace Boids.Core.Configuration
                 float.TryParse(split[1], out alpha);
             }
 
-            var clrColor = System.Drawing.ColorTranslator.FromHtml(hex);
+            var clrColor = ColorTranslator.FromHtml(hex);
             var xnaColor = clrColor.ToXnaColor(alpha);
 
             return xnaColor;

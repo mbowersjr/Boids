@@ -34,31 +34,22 @@ namespace Boids.Core.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Application starting");
-
             _appLifetime.ApplicationStarted.Register(async () =>
-            {            
-                _logger.LogDebug("Application started");
-                
-                await Task.Run(() =>
+            {
+                using (var game = ActivatorUtilities.CreateInstance<MainGame>(_services, cancellationToken))
                 {
-                    using (var game = ActivatorUtilities.CreateInstance<MainGame>(_services))
-                    {
-                        game.Run();
-                    }
+                    game.Run();
+                }
                 
-                    _appLifetime.StopApplication();
-                    
-                }, cancellationToken);
+                _appLifetime.StopApplication();
             });
-
+            
+            
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Application stopped");
-
             return Task.CompletedTask;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ using MonoGame.Extended;
 using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
+using MonoGame.Extended.Input.InputListeners;
 
 namespace Boids.Core
 {
@@ -26,19 +28,27 @@ namespace Boids.Core
         
         private readonly IFlock _flock;
         private readonly ILogger<MainGame> _logger;
-        private IOptionsMonitor<BoidsOptions> _optionsMonitor;
-        private readonly IServiceProvider _services;
+        private IOptionsMonitor<BoidsOptions> _optionsMonitor;        
+        private readonly IInputListenerService _inputListener;
+        private readonly CancellationToken _cancellationToken;
+        
         public static BoidsOptions Options { get; set; }
         public static FastRandom Random { get; private set; } = new FastRandom();
         
-        public MainGame(IFlock flock, PartitionGrid partitionGrid, IOptionsMonitor<BoidsOptions> optionsMonitor, IServiceProvider services, ILogger<MainGame> logger)
+        public MainGame(IFlock flock, 
+                        PartitionGrid partitionGrid, 
+                        IInputListenerService inputListener,
+                        IOptionsMonitor<BoidsOptions> optionsMonitor, 
+                        ILogger<MainGame> logger,
+                        CancellationToken cancellationToken)
         {
-            _partitionGrid = partitionGrid;
             _flock = flock;
+            _partitionGrid = partitionGrid;
+            _inputListener = inputListener;
             _optionsMonitor = optionsMonitor;
-            _services = services;
             _logger = logger;
-
+            _cancellationToken = cancellationToken;
+            
             Options = _optionsMonitor.CurrentValue;
             _optionsMonitor.OnChange(options =>
             {
@@ -65,19 +75,49 @@ namespace Boids.Core
         protected override void Initialize()
         {
             base.Initialize();
-            
+
             Graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
             Graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
             Graphics.ApplyChanges();
 
             CenterWindow();
             
+            _inputListener.Initialize(this);
+            RegisterInputHandlers();
             _partitionGrid.Initialize();
             _flock.ResetFlock();
 
             _flock.Paused = false;
         }
+
+        private void RegisterInputHandlers()
+        {
+            _inputListener.KeyboardListener.KeyPressed += InputListener_OnKeyPressed;
+        }
         
+        private void InputListener_OnKeyPressed(object sender, KeyboardEventArgs e)
+        {
+            if (e.Key == Keys.Escape || e.Key == Keys.Q)
+            {
+                Exit();
+            }
+
+            if (e.Key == Keys.P)
+            {
+                _flock.Paused = !_flock.Paused;
+            }
+
+            if (e.Key == Keys.R)
+            {
+                _flock?.ResetFlock();
+            }
+
+            if (e.Key == Keys.OemTilde)
+            {
+                Options.DisplayDebugData = !Options.DisplayDebugData;
+            }
+        }
+
         private void CenterWindow()
         {
             var displayMode = Graphics.GraphicsDevice.DisplayMode;
@@ -103,21 +143,12 @@ namespace Boids.Core
         protected override void UnloadContent()
         {
             _spriteBatch.Dispose();
+            Boid.BoidSprite.Dispose();
         }
 
         protected override void Update(GameTime gameTime)
         {
-            var keyboardState = Keyboard.GetState();
             
-            if (keyboardState.IsKeyDown(Keys.Escape) || keyboardState.IsKeyDown(Keys.Q))
-                Exit();
-
-            if (keyboardState.IsKeyDown(Keys.P)) 
-                _flock.Paused = !_flock.Paused;
-            
-            if (keyboardState.IsKeyDown(Keys.R)) 
-                _flock.ResetFlock();
-
             var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
             _flock.Update(elapsedSeconds);
@@ -128,12 +159,11 @@ namespace Boids.Core
 
         protected override void Draw(GameTime gameTime)
         {
-            
-            GraphicsDevice.Clear(Color.WhiteSmoke);
+            GraphicsDevice.Clear(MainGame.Options.Theme.BackgroundColor.Value);
 
             _partitionGrid.Draw(gameTime);
 
-            _flock.Draw(_spriteBatch, _spriteFont);
+            _flock.Draw(gameTime, _spriteBatch, _spriteFont);
             
             base.Draw(gameTime);
         }

@@ -16,7 +16,7 @@ namespace Boids.Core.Entities
         IFlockBehaviors Behaviors { get; }
         bool Paused { get; set; }
         void ResetFlock();
-        void Draw(SpriteBatch spriteBatch, SpriteFont spriteFont);
+        void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont);
         void Update(float elapsedSeconds);
     }
 
@@ -44,14 +44,14 @@ namespace Boids.Core.Entities
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch, SpriteFont spriteFont)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
                     continue;
 
-                boid.Draw(spriteBatch, spriteFont);
+                boid.Draw(gameTime, spriteBatch, spriteFont);
             }
         }
 

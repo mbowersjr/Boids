@@ -31,6 +31,8 @@ namespace Boids.Core
 
             builder.ConfigureServices((hostContext, services) =>
             {
+                services.AddTransient<IEnumCacheProvider, EnumCacheProvider>();
+                services.AddTransient<IInputListenerService, InputListenerService>();
                 services.AddSingleton<MainGame>();
                 services.AddTransient<IFlock, Flock>();
                 services.AddTransient<IFlockBehaviors, FlockBehaviors>();
@@ -49,23 +51,8 @@ namespace Boids.Core
                 hostConfig.AddCommandLine(args);
             });
 
-            builder.ConfigureAppConfiguration((hostingContext, appConfig) =>
+            builder.ConfigureAppConfiguration(appConfig =>
             {
-                // appConfig.Sources.Clear();
-                // var appSettingsJson = new JsonConfigurationSource()
-                // {
-                //     Optional = true,
-                //     Path = "appsettings.json",
-                //     ReloadOnChange = true,
-                //     OnLoadException = context =>
-                //     {
-                //         context.Ignore = false;
-                //         throw new Exception("Could not load appsettings.json", context.Exception);
-                //     }
-                // };
-                //
-                // appConfig.Add(appSettingsJson);
-
                 appConfig
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                     .AddJsonFile($"appsettings.{GetAssemblyConfiguration()}.json", optional: true, reloadOnChange: true)

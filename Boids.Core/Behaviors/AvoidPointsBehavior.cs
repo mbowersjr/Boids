@@ -7,6 +7,7 @@ using MonoGame.Extended;
 
 namespace Boids.Core.Behaviors
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     public class AvoidPointsBehavior : IBehavior
     {
         public string Name => "AvoidPoints";
@@ -14,20 +15,23 @@ namespace Boids.Core.Behaviors
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
 
+        private Vector2[] _avoidedPoints = new Vector2[3];
+
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
             var force = new Vector2();
             var count = 0;
 
-            var points = GetNearestBoundsPoints(boid);
-            foreach (var point in points)
+            UpdateNearestAvoidedPoints(boid, ref _avoidedPoints);
+            
+            foreach (var point in _avoidedPoints)
             {
                 var direction = boid.Position - point;
                 var distance = direction.Length();
 
                 if (distance > 0f && distance < Radius)
                 {
-                    force += direction * (1f / distance);
+                    force += direction / (1f / distance);
                     count++;
                 }
             }
@@ -38,21 +42,19 @@ namespace Boids.Core.Behaviors
             return force.Length() > 0f ? force : Vector2.Zero;
         }
 
-        public static Vector2[] GetNearestBoundsPoints(Boid boid)
+        public static void UpdateNearestAvoidedPoints(Boid boid, ref Vector2[] points)
         {
             var viewportBounds = MainGame.Graphics.GraphicsDevice.Viewport.Bounds;
             
             var nearestBoundsX = (boid.Position.X / 2f < viewportBounds.Center.X / 2f) ? 0f : viewportBounds.Width;
             var nearestBoundsY = (boid.Position.Y / 2f < viewportBounds.Center.Y / 2f) ? 0f : viewportBounds.Height;
 
-            var points = new Vector2[]
-            {
-                new Vector2(boid.Position.X, nearestBoundsY),
-                new Vector2(nearestBoundsX, boid.Position.Y),
-                new Vector2(nearestBoundsX, nearestBoundsY)
-            };
-            
-            return points;
+            points[0].X = boid.Position.X;
+            points[0].Y = nearestBoundsY;
+            points[1].X = nearestBoundsX;
+            points[1].Y = boid.Position.Y;
+            points[2].X = nearestBoundsX;
+            points[2].Y = nearestBoundsY;
         }
     }
 }
