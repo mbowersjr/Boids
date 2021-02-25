@@ -22,13 +22,6 @@ namespace Boids.Core.Entities
             }
         }
 
-        
-        
-        public const float MinSpawnVelocity = 3f;
-        public const float MaxSpawnVelocity = 10f;
-        public const float MaxVelocity = 10f;
-        public const float MaxForce = 10f;
-
         private Vector2 _position;
         public Vector2 Position
         {
@@ -74,7 +67,7 @@ namespace Boids.Core.Entities
             
             DrawBoid(spriteBatch);
 
-            if (MainGame.Options.DisplayAvoidedPointLines)
+            if (MainGame.Options.AvoidedPointsDisplay.NearestPoints)
             {
                 DrawAvoidedPointLines(spriteBatch);
             }
@@ -133,13 +126,13 @@ namespace Boids.Core.Entities
                     ? MainGame.Options.Theme.AvoidedPointActiveLineColor.Value 
                     : MainGame.Options.Theme.AvoidedPointLineColor.Value;
 
-                if (pointIsActive && MainGame.Options.DisplayAvoidedPointLines)
+                if (pointIsActive && MainGame.Options.AvoidedPointsDisplay.HighlightActivePoints)
                 {
                     spriteBatch.DrawLine(point1: Position,
                                          point2: point,
                                          color: lineColor,
                                          thickness: 2f,
-                                         layerDepth: 1f);    
+                                         layerDepth: 1f);
                 }
             }
         }
@@ -164,7 +157,7 @@ namespace Boids.Core.Entities
         public void Reset()
         {
             IsActive = true;
-            var quarterResolution = new Vector2(MainGame.Options.Graphics.Resolution.X / 4f, MainGame.Options.Graphics.Resolution.Y / 4f);
+            var quarterResolution = new Vector2(MainGame.ViewportAdapter.BoundingRectangle.Width / 4f, MainGame.ViewportAdapter.BoundingRectangle.Height / 4f);
             var minX = quarterResolution.X * 1f;
             var maxX = quarterResolution.X * 3f;
             var minY = quarterResolution.Y * 1f;
@@ -172,7 +165,7 @@ namespace Boids.Core.Entities
             
             Position = new Vector2(MainGame.Random.NextSingle(minX, maxX), MainGame.Random.NextSingle(minY, maxY));
             MainGame.Random.NextUnitVector(out _velocity);
-            _velocity *= MainGame.Random.NextSingle(MinSpawnVelocity, MaxSpawnVelocity);
+            _velocity *= MainGame.Random.NextSingle(MainGame.Options.Limits.SpawnVelocity.Min, MainGame.Options.Limits.SpawnVelocity.Max);
             Rotation = Velocity.ToRadians();
             Acceleration = Vector2.Zero;
         }
@@ -182,15 +175,15 @@ namespace Boids.Core.Entities
             if (!IsActive)
                 return;
 
-            Velocity += Acceleration.Truncate(Boid.MaxForce) * elapsedSeconds;
+            Velocity += Acceleration.Truncate(MainGame.Options.Limits.MaxForce) * elapsedSeconds;
             Acceleration = Vector2.Zero;
-            Velocity.Truncate(Boid.MaxVelocity);
+            Velocity.Truncate(MainGame.Options.Limits.MaxVelocity);
             Rotation = Velocity.ToRadians();
             Position += Velocity * elapsedSeconds;
             CellPosition = MainGame.Grid.GetCellPosition(this);
 
-            if (Position.X < 0f || Position.X > MainGame.Options.Graphics.Resolution.X ||
-                Position.Y < 0f || Position.Y > MainGame.Options.Graphics.Resolution.Y)
+            if (Position.X < 0f || Position.X > MainGame.ViewportAdapter.BoundingRectangle.Width ||
+                Position.Y < 0f || Position.Y > MainGame.ViewportAdapter.BoundingRectangle.Height)
             {
                 Reset();
             }

@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +17,7 @@ using MonoGame.Extended;
 using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.ViewportAdapters;
 
@@ -56,28 +61,40 @@ namespace Boids.Core
             {
                 Options = options;
                 
+                InitializeViewport();
                 _partitionGrid.Initialize();
                 _flock.ResetFlock();
             });
             
-            _logger.LogDebug("Applying graphics settings: {X} x {Y} VSync: {VSync}",
-                Options.Graphics.Resolution.X, Options.Graphics.Resolution.Y, Options.Graphics.VSync);
-
             IsMouseVisible = true;
             Content.RootDirectory = "Content";
             
             Graphics = new GraphicsDeviceManager(this);
-            Graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
-            Graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
-            Graphics.SynchronizeWithVerticalRetrace = Options.Graphics.VSync;
-            Graphics.PreferMultiSampling = true;
+            var virtualWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
+            var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
+            Graphics.PreferredBackBufferWidth = virtualWidth;
+            Graphics.PreferredBackBufferHeight = virtualHeight;
             Graphics.ApplyChanges();
+            
+            InitializeViewport();
         }
 
         protected override void Initialize()
         {
             base.Initialize();
 
+            InitializeViewport();
+            
+            _inputListener.Initialize(this);
+            RegisterInputHandlers();
+            _partitionGrid.Initialize();
+            _flock.ResetFlock();
+
+            _flock.Paused = false;
+        }
+
+        private void InitializeViewport()
+        {
             var virtualWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
             var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
             
@@ -86,18 +103,21 @@ namespace Boids.Core
             Graphics.ApplyChanges();
 
             ViewportAdapter = new BoxingViewportAdapter(window: Window,
-                                                         graphicsDevice: Graphics.GraphicsDevice,
-                                                         virtualWidth: Options.Graphics.Resolution.X,
-                                                         virtualHeight: Options.Graphics.Resolution.Y);
+                graphicsDevice: Graphics.GraphicsDevice,
+                virtualWidth: virtualWidth,
+                virtualHeight: virtualHeight);
+
+            ViewportAdapter.Reset();
             
             CenterWindow();
-            
-            _inputListener.Initialize(this);
-            RegisterInputHandlers();
-            _partitionGrid.Initialize();
-            _flock.ResetFlock();
 
-            _flock.Paused = false;
+            using (var scope = _logger.BeginScope("Initialized viewport:"))
+            {
+                _logger.LogInformation("Resolution: {X} x {Y}", ViewportAdapter.ViewportWidth, ViewportAdapter.ViewportHeight);
+                _logger.LogInformation("Virtual resolution: {X} x {Y}", ViewportAdapter.VirtualWidth, ViewportAdapter.VirtualHeight);
+                _logger.LogInformation("Window position: {X} x {Y}", Window.Position.X, Window.Position.Y);
+                _logger.LogInformation("VSync: {VSync}", Graphics.SynchronizeWithVerticalRetrace);
+            }
         }
 
         private void RegisterInputHandlers()
@@ -122,10 +142,54 @@ namespace Boids.Core
                 _flock?.ResetFlock();
             }
 
-            if (e.Key == Keys.OemTilde)
+            if (e.Key == Keys.F1)
             {
                 Options.DisplayDebugData = !Options.DisplayDebugData;
             }
+
+            if (e.Key == Keys.OemComma && e.Modifiers.HasFlag(KeyboardModifiers.Control))
+            {
+                var appSettingsFile = GetAppSettingsFile();
+                var process = OpenFileInExternalEditor(appSettingsFile);
+            }
+        }
+
+        private Process OpenFileInExternalEditor(FileInfo file)
+        {
+            if (file == null)
+                throw new ArgumentNullException(nameof(file));
+            
+            if (!file.Exists)
+                throw new FileNotFoundException("File does not exist", file.FullName);
+            
+            var process = new Process();
+            process.StartInfo.FileName = "explorer";
+            process.StartInfo.Arguments = $"\"{file.FullName}\"";
+            process.Start();
+            
+            return process;
+        }
+        private FileInfo GetAppSettingsFile()
+        {
+            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            var assemblyFile = new FileInfo(assemblyLocation);
+            var assemblyDirectory = assemblyFile.Directory;
+
+            if (assemblyDirectory == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var appSettingsFile = assemblyDirectory.GetFiles("appSettings.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
+
+            if (appSettingsFile == null)
+            {
+                _logger.LogWarning("appSettings.json file not found in assembly directory {Directory}", assemblyDirectory.FullName);
+                return null;
+            }
+
+            _logger.LogDebug("Found appSettings.json file: {Path}", appSettingsFile.FullName);
+            return appSettingsFile;
         }
 
         private void CenterWindow()

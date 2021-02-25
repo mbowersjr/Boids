@@ -79,7 +79,7 @@ namespace Boids.Core.Entities
                     boid.Acceleration += force;
                 }
 
-                boid.Acceleration.Truncate(Boid.MaxForce);
+                boid.Acceleration.Truncate(MainGame.Options.Limits.MaxForce);
 
                 boid.Update(elapsedSeconds);
             }

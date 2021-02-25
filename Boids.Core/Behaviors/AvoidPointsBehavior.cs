@@ -36,8 +36,8 @@ namespace Boids.Core.Behaviors
                 }
             }
 
-            if (count > 0)
-                force /= count;
+            // if (count > 0)
+            //     force /= count;
 
             return force.Length() > 0f ? force : Vector2.Zero;
         }
