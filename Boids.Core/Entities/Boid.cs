@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Boids.Core;
 using Boids.Core.Behaviors;
 using MonoGame.Extended;
+using MonoGame.Extended.ViewportAdapters;
 
 namespace Boids.Core.Entities
 {
@@ -64,9 +65,12 @@ namespace Boids.Core.Entities
             _flock = flock;
         }
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, ViewportAdapter viewportAdapter)
         {
-            spriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.NonPremultiplied, sortMode: SpriteSortMode.Immediate);
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+                              blendState: BlendState.NonPremultiplied,
+                              sortMode: SpriteSortMode.Immediate,
+                              transformMatrix: viewportAdapter.GetScaleMatrix());
             
             DrawBoid(spriteBatch);
 
@@ -134,8 +138,8 @@ namespace Boids.Core.Entities
                     spriteBatch.DrawLine(point1: Position,
                                          point2: point,
                                          color: lineColor,
-                                         thickness: 1f,
-                                         layerDepth: 0f);    
+                                         thickness: 2f,
+                                         layerDepth: 1f);    
                 }
             }
         }

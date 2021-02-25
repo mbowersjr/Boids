@@ -9,7 +9,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework;
 using Boids.Core.Entities;
-    
+using MonoGame.Extended.ViewportAdapters;
+
 namespace Boids.Core.Services
 {
     public class PartitionGrid
@@ -62,9 +63,9 @@ namespace Boids.Core.Services
             }
         }
         
-        public void Draw(GameTime gameTime)
+        public void Draw(GameTime gameTime, ViewportAdapter viewportAdapter)
         {
-            _gridRenderer.Draw(gameTime);
+            _gridRenderer.Draw(gameTime, viewportAdapter);
         }
         
         public Vector2 GetCellPosition(Boid boid)

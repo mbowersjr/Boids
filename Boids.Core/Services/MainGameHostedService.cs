@@ -34,7 +34,7 @@ namespace Boids.Core.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _appLifetime.ApplicationStarted.Register(async () =>
+            _appLifetime.ApplicationStarted.Register(() =>
             {
                 using (var game = ActivatorUtilities.CreateInstance<MainGame>(_services, cancellationToken))
                 {

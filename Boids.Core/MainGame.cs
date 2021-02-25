@@ -14,6 +14,7 @@ using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
 using MonoGame.Extended.Input.InputListeners;
+using MonoGame.Extended.ViewportAdapters;
 
 namespace Boids.Core
 {
@@ -31,6 +32,7 @@ namespace Boids.Core
         private IOptionsMonitor<BoidsOptions> _optionsMonitor;        
         private readonly IInputListenerService _inputListener;
         private readonly CancellationToken _cancellationToken;
+        public static ViewportAdapter ViewportAdapter { get; private set; }
         
         public static BoidsOptions Options { get; set; }
         public static FastRandom Random { get; private set; } = new FastRandom();
@@ -76,10 +78,18 @@ namespace Boids.Core
         {
             base.Initialize();
 
-            Graphics.PreferredBackBufferWidth = Options.Graphics.Resolution.X;
-            Graphics.PreferredBackBufferHeight = Options.Graphics.Resolution.Y;
+            var virtualWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
+            var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
+            
+            Graphics.PreferredBackBufferWidth = virtualWidth;
+            Graphics.PreferredBackBufferHeight = virtualHeight;
             Graphics.ApplyChanges();
 
+            ViewportAdapter = new BoxingViewportAdapter(window: Window,
+                                                         graphicsDevice: Graphics.GraphicsDevice,
+                                                         virtualWidth: Options.Graphics.Resolution.X,
+                                                         virtualHeight: Options.Graphics.Resolution.Y);
+            
             CenterWindow();
             
             _inputListener.Initialize(this);
@@ -147,8 +157,7 @@ namespace Boids.Core
         }
 
         protected override void Update(GameTime gameTime)
-        {
-            
+        {            
             var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
             _flock.Update(elapsedSeconds);
@@ -161,11 +170,9 @@ namespace Boids.Core
         {
             GraphicsDevice.Clear(MainGame.Options.Theme.BackgroundColor.Value);
 
-            _partitionGrid.Draw(gameTime);
+            _partitionGrid.Draw(gameTime, ViewportAdapter);
 
-            _flock.Draw(gameTime, _spriteBatch, _spriteFont);
-            
-            base.Draw(gameTime);
+            _flock.Draw(gameTime, _spriteBatch, _spriteFont, ViewportAdapter);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Boids.Core.Behaviors
 
         public static void UpdateNearestAvoidedPoints(Boid boid, ref Vector2[] points)
         {
-            var viewportBounds = MainGame.Graphics.GraphicsDevice.Viewport.Bounds;
+            var viewportBounds = MainGame.ViewportAdapter.BoundingRectangle;
             
             var nearestBoundsX = (boid.Position.X / 2f < viewportBounds.Center.X / 2f) ? 0f : viewportBounds.Width;
             var nearestBoundsY = (boid.Position.Y / 2f < viewportBounds.Center.Y / 2f) ? 0f : viewportBounds.Height;

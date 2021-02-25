@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Boids.Core.Behaviors;
 using MonoGame.Extended;
+using MonoGame.Extended.ViewportAdapters;
 
 namespace Boids.Core.Entities
 {
@@ -16,7 +17,7 @@ namespace Boids.Core.Entities
         IFlockBehaviors Behaviors { get; }
         bool Paused { get; set; }
         void ResetFlock();
-        void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont);
+        void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, ViewportAdapter viewportAdapter);
         void Update(float elapsedSeconds);
     }
 
@@ -44,14 +45,14 @@ namespace Boids.Core.Entities
             }
         }
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, ViewportAdapter viewportAdapter)
         {
             foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
                     continue;
 
-                boid.Draw(gameTime, spriteBatch, spriteFont);
+                boid.Draw(gameTime, spriteBatch, spriteFont, viewportAdapter);
             }
         }
 

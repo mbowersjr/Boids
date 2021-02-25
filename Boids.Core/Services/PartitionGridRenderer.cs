@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.VectorDraw;
+using MonoGame.Extended.ViewportAdapters;
 
 namespace Boids.Core.Services
 {
@@ -91,12 +92,18 @@ namespace Boids.Core.Services
         private Matrix _localProjection;
         private Matrix _localView;
 
-        public void Draw(GameTime gameTime)
+        public void Draw(GameTime gameTime, ViewportAdapter viewportAdapter)
         {
             if (!MainGame.Options.PartitionGrid.Visible)
                 return;
 
-            _localProjection = Matrix.CreateOrthographicOffCenter(0f, _parentPartitionGrid.ViewportWidth, _parentPartitionGrid.ViewportHeight, 0f, 0f, 1f);
+            _localProjection = Matrix.CreateOrthographicOffCenter(left: 0f,
+                                                                  right: viewportAdapter.ViewportWidth,
+                                                                  bottom: viewportAdapter.ViewportHeight,
+                                                                  top: 0f,
+                                                                  zNearPlane: 0f,
+                                                                  zFarPlane: 1f);
+            // _localProjection = Matrix.CreateOrthographicOffCenter(0f, _parentPartitionGrid.ViewportWidth, _parentPartitionGrid.ViewportHeight, 0f, 0f, 1f);
             _localView = Matrix.Identity;
 
             _primitiveBatch.Begin(ref _localProjection, ref _localView);
