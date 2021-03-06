@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,8 +18,8 @@ namespace Boids.Core.Entities
         IFlockBehaviors Behaviors { get; }
         bool Paused { get; set; }
         void ResetFlock();
-        void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, ViewportAdapter viewportAdapter);
-        void Update(float elapsedSeconds);
+        void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont);
+        void Update(GameTime gameTime);
     }
 
     public class Flock : IFlock
@@ -40,23 +41,45 @@ namespace Boids.Core.Entities
             for (var i = 0; i < MainGame.Options.Count; i++)
             {
                 var boid = new Boid(this);
+                InitializeBoid(boid);
+                
                 Boids.Add(boid);
-                boid.Reset();
             }
         }
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, ViewportAdapter viewportAdapter)
+        public void InitializeBoid(Boid boid)
+        {
+            boid.IsActive = true;
+            
+            var spawnArea = MainGame.ViewportAdapter.BoundingRectangle.ToRectangleF();
+            spawnArea.Inflate(-200f, -200f);
+
+            var position = MainGame.Random.NextVector2Within(ref spawnArea);
+            Debug.Assert(MainGame.ViewportAdapter.BoundingRectangle.Contains(position), "Spawn position is not within viewport bounds");
+
+            boid.Position = position;
+            
+            Vector2 velocity;
+            MainGame.Random.NextUnitVector(out velocity);
+            velocity *= MainGame.Random.NextSingle(MainGame.Options.Limits.SpawnVelocity.Range.Value);
+            boid.Velocity = velocity;
+            
+            boid.Rotation = boid.Velocity.ToRadians();
+            boid.Acceleration = Vector2.Zero;
+        }
+
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
                     continue;
 
-                boid.Draw(gameTime, spriteBatch, spriteFont, viewportAdapter);
+                boid.Draw(gameTime, spriteBatch, spriteFont);
             }
         }
 
-        public void Update(float elapsedSeconds)
+        public void Update(GameTime gameTime)
         {
             if (Paused)
                 return;
@@ -73,15 +96,13 @@ namespace Boids.Core.Entities
 
                     var force = behavior.Perform(boid, Boids);
                     
-                    if (behavior.Coefficient != null)
-                        force *= behavior.Coefficient.Value;
+                    // if (behavior.Coefficient != null && MainGame.Options.IgnoreBehaviorCoefficients != true)
+                    //     force *= behavior.Coefficient.Value;
 
-                    boid.Acceleration += force;
+                    boid.ApplyForce(force);
                 }
 
-                boid.Acceleration.Truncate(MainGame.Options.Limits.MaxForce);
-
-                boid.Update(elapsedSeconds);
+                boid.Update(gameTime);
             }
         }
     }

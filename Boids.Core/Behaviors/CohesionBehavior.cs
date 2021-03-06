@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using MonoGame.Extended;
 using Boids.Core.Entities;
 using Boids.Core;
 
@@ -14,9 +15,12 @@ namespace Boids.Core.Behaviors
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
         
+        
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
-            var force = new Vector2();
+            // Steers toward the average position of all nearby boids
+            
+            var totalForce = new Vector2();
             var count = 0;
 
             foreach (var other in boids)
@@ -27,25 +31,20 @@ namespace Boids.Core.Behaviors
                 if (!other.IsActive)
                     continue;
 
-                // Cell position distance
-                if (Vector2.Distance(boid.CellPosition, other.CellPosition) > 2f)
-                    continue;
-
                 // Position distance
-                var direction = other.Position - boid.Position;
-                var distance = direction.Length();
+                var distance = Vector2.Distance(other.Position, boid.Position);
                 
                 if (distance > 0f && distance < Radius)
                 {
-                    force += direction; //other.Position;
+                    totalForce += other.Position;
                     count++;
                 }
             }
 
             if (count > 0)
-                force /= count;
+                totalForce /= count;
 
-            return force.Length() > 0f ? force : Vector2.Zero;
+            return totalForce.Length() > 0f ? totalForce : Vector2.Zero;
         }
     }
 }

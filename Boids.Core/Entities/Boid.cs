@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -12,42 +13,24 @@ namespace Boids.Core.Entities
     public class Boid
     {
         private static Texture2D _boidSprite;
-        public static Texture2D BoidSprite
-        {
-            get => _boidSprite;
-            set
-            {
-                _boidSprite = value;
-                //_boidSpriteOrigin = new Vector2(_boidSprite.Width / 2f, _boidSprite.Height / 2f);
-            }
-        }
+        public static Texture2D BoidSprite { get => _boidSprite; set => _boidSprite = value; }
+
+        private static float BoidRadius => MainGame.Options.BoidRadius;
 
         private Vector2 _position;
-        public Vector2 Position
-        {
-            get => _position;
-            set => _position = value;
-        }
+        public Vector2 Position { get => _position; set => _position = value; }
 
         private float _rotation;
-        private float Rotation { get => _rotation; set => _rotation = value; }
+        public float Rotation { get => _rotation; set => _rotation = value; }
 
-        private Vector2 _cellPosition;
-        public Vector2 CellPosition { get => _cellPosition; private set => _cellPosition = value; }
+        // private Point _cellPosition;
+        // public Point CellPosition { get => _cellPosition; set => _cellPosition = value; }
 
         private Vector2 _velocity;
-        public Vector2 Velocity 
-        { 
-            get => _velocity; 
-            set => _velocity = value;
-        }
+        public Vector2 Velocity { get => _velocity; set => _velocity = value; }
 
         private Vector2 _acceleration;
-        public Vector2 Acceleration
-        {
-            get => _acceleration;
-            set => _acceleration = value;
-        }
+        public Vector2 Acceleration { get => _acceleration; set => _acceleration = value; }
 
         public bool IsActive { get; set; }
 
@@ -58,12 +41,12 @@ namespace Boids.Core.Entities
             _flock = flock;
         }
 
-        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont, ViewportAdapter viewportAdapter)
+        public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             spriteBatch.Begin(samplerState: SamplerState.PointClamp,
                               blendState: BlendState.NonPremultiplied,
                               sortMode: SpriteSortMode.Immediate,
-                              transformMatrix: viewportAdapter.GetScaleMatrix());
+                              transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
             
             DrawBoid(spriteBatch);
 
@@ -92,19 +75,39 @@ namespace Boids.Core.Entities
             //                  effects: SpriteEffects.None,
             //                  layerDepth: 0f);
             
+            DrawDistanceReferenceCircles(spriteBatch);
+            
             spriteBatch.DrawCircle(center: Position, 
-                                   radius: 10f, 
+                                   radius: BoidRadius, 
                                    sides: 32, 
                                    color: MainGame.Options.Theme.BoidColor.Value, 
                                    thickness: 2f, 
-                                   layerDepth: 0f);
+                                   layerDepth: 1f);
 
             spriteBatch.DrawLine(point: Position,
                                  angle: Rotation,
-                                 length: 30f,
+                                 length: BoidRadius * 2,
                                  color: MainGame.Options.Theme.BoidDirectionLineColor.Value,
                                  thickness: 2f,
-                                 layerDepth: 0f);
+                                 layerDepth: 1f);
+
+        }
+
+        private static readonly float[] _radii = new[] { 25f, 50f, 75f, 100f, 200f }; 
+        private void DrawDistanceReferenceCircles(SpriteBatch spriteBatch)
+        {
+            if (!MainGame.Options.DisplayDistanceReferenceCircles)
+                return;
+            
+            foreach (var radius in _radii)
+            {
+                spriteBatch.DrawCircle(center: Position,
+                                       radius: radius,
+                                       sides: 32,
+                                       color: MainGame.Options.Theme.AvoidedPointLineColor.Value,
+                                       thickness: 1f,
+                                       layerDepth: 1f);
+            }
         }
 
         private IBehavior _avoidPointsBehavior;
@@ -113,7 +116,7 @@ namespace Boids.Core.Entities
             _avoidPointsBehavior ??= _flock.Behaviors.GetBehavior("AvoidPoints");
             
             Vector2[]  avoidedPoints = new Vector2[3];
-            AvoidPointsBehavior.UpdateNearestAvoidedPoints(this, ref avoidedPoints);
+            AvoidPointsBehavior.FindNearestBoundsPoints(this, ref avoidedPoints);
             
             foreach (var point in avoidedPoints)
             {
@@ -132,7 +135,7 @@ namespace Boids.Core.Entities
                                          point2: point,
                                          color: lineColor,
                                          thickness: 2f,
-                                         layerDepth: 1f);
+                                         layerDepth: 2f);
                 }
             }
         }
@@ -141,8 +144,10 @@ namespace Boids.Core.Entities
         private void DrawBoidPropertiesText(SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             _sb.Clear();
+            
             _sb.AppendFormat("P: {0:N3}, {1:N3}\n", Position.X, Position.Y);
             _sb.AppendFormat("V: {0:N3}, {1:N3}\n", Velocity.X, Velocity.Y);
+            _sb.AppendFormat("A: {0:N3}, {1:N3}\n", Acceleration.X, Acceleration.Y);
             _sb.AppendFormat("R: {0:N3} rad.   \n", Rotation);
 
             var textSize = spriteFont.MeasureString(_sb);
@@ -153,40 +158,80 @@ namespace Boids.Core.Entities
                                    position: textPosition,
                                    color: MainGame.Options.Theme.BoidPropertiesTextColor.Value);
         }
-
-        public void Reset()
-        {
-            IsActive = true;
-            var quarterResolution = new Vector2(MainGame.ViewportAdapter.BoundingRectangle.Width / 4f, MainGame.ViewportAdapter.BoundingRectangle.Height / 4f);
-            var minX = quarterResolution.X * 1f;
-            var maxX = quarterResolution.X * 3f;
-            var minY = quarterResolution.Y * 1f;
-            var maxY = quarterResolution.Y * 3f;
-            
-            Position = new Vector2(MainGame.Random.NextSingle(minX, maxX), MainGame.Random.NextSingle(minY, maxY));
-            MainGame.Random.NextUnitVector(out _velocity);
-            _velocity *= MainGame.Random.NextSingle(MainGame.Options.Limits.SpawnVelocity.Min, MainGame.Options.Limits.SpawnVelocity.Max);
-            Rotation = Velocity.ToRadians();
-            Acceleration = Vector2.Zero;
-        }
         
-        public void Update(float elapsedSeconds)
+        public void Update(GameTime gameTime)
         {
             if (!IsActive)
                 return;
 
-            Velocity += Acceleration.Truncate(MainGame.Options.Limits.MaxForce) * elapsedSeconds;
-            Acceleration = Vector2.Zero;
-            Velocity.Truncate(MainGame.Options.Limits.MaxVelocity);
-            Rotation = Velocity.ToRadians();
+            var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            
+            Velocity += Acceleration * elapsedSeconds;
+            Velocity = Velocity.Truncate(MainGame.Options.Limits.MaxVelocity);
+            
             Position += Velocity * elapsedSeconds;
-            CellPosition = MainGame.Grid.GetCellPosition(this);
+            Rotation = Velocity.ToRadians();
+            Acceleration = Vector2.Zero;
+            
+            //CellPosition = MainGame.Grid.GetCellPosition(Position);
 
-            if (Position.X < 0f || Position.X > MainGame.ViewportAdapter.BoundingRectangle.Width ||
-                Position.Y < 0f || Position.Y > MainGame.ViewportAdapter.BoundingRectangle.Height)
-            {
-                Reset();
-            }
+            // if (!MainGame.ViewportAdapter.BoundingRectangle.Contains(Position)) 
+            //     IsActive = false;
         }
+
+        public void ApplyForce(Vector2 force)
+        {
+            // Implements Reynolds steering formula: steering force = desired velocity - current velocity
+            // Reference: Nature of Code, chapter 6.3 (https://natureofcode.com/book/chapter-6-autonomous-agents/)
+            
+            force.Normalize();
+            force *= MainGame.Options.Limits.MaxVelocity;
+            force -= Velocity;
+            force = force.Truncate(MainGame.Options.Limits.MaxForce);
+
+            Acceleration += force;
+        }
+
+        // public void Seek(Vector2 target)
+        // {
+        //     var desiredPosition = target - _position;
+        //     desiredPosition.Normalize();
+        //     desiredPosition *= MainGame.Options.Limits.MaxVelocity;
+        //     
+        //     var adjustment = desiredPosition - Velocity;
+        //     adjustment.Truncate(MainGame.Options.Limits.MaxForce);
+        //
+        //     ApplyForce(adjustment);
+        // }
+
+        // public void Flee(Vector2 from)
+        // {
+        //     Seek(from * -1);
+        // }
+
+        // public void Arrive(Vector2 target)
+        // {
+        //     var desired = target - _position;
+        //
+        //     var distance = desired.Length();
+        //     desired.Normalize();
+        //     
+        //     if (distance < MainGame.Options.Limits.ArrivalDistance)
+        //     {
+        //         var scaledMagnitude = ScaleHelper.ScaleValue(val: distance,
+        //                                                           fromMin: 0f, fromMax: MainGame.Options.Limits.ArrivalDistance, 
+        //                                                           toMin:   0f, toMax:   MainGame.Options.Limits.MaxVelocity);
+        //         desired *= scaledMagnitude;
+        //     }
+        //     else
+        //     {
+        //         desired *= MainGame.Options.Limits.MaxVelocity;
+        //     }
+        //
+        //     var force = desired - _velocity;
+        //     force.Truncate(MainGame.Options.Limits.MaxForce);
+        //     
+        //     ApplyForce(force);
+        // }
     }
 }

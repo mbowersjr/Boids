@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using MonoGame.Extended;
 using Boids.Core.Entities;
 using Boids.Core;
-using MonoGame.Extended;
 
 namespace Boids.Core.Behaviors
 {
@@ -19,10 +19,10 @@ namespace Boids.Core.Behaviors
 
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
-            var force = new Vector2();
+            var totalForce = new Vector2();
             var count = 0;
 
-            UpdateNearestAvoidedPoints(boid, ref _avoidedPoints);
+            FindNearestBoundsPoints(boid, ref _avoidedPoints);
             
             foreach (var point in _avoidedPoints)
             {
@@ -31,17 +31,38 @@ namespace Boids.Core.Behaviors
 
                 if (distance > 0f && distance < Radius)
                 {
-                    force += direction / (1f / distance);
+                    var force = Vector2.Normalize(direction) / distance;
+                    totalForce += force;
                     count++;
                 }
             }
 
-            // if (count > 0)
-            //     force /= count;
+            if (count > 0)
+                totalForce /= count;
 
-            return force.Length() > 0f ? force : Vector2.Zero;
+            return totalForce.Length() > 0f ? totalForce : Vector2.Zero;
         }
+ 
+        private static bool IsLeftHalf(Boid boid) => boid.Position.X < MainGame.ViewportAdapter.BoundingRectangle.Center.X;
+        private static bool IsRightHalf(Boid boid) => !IsLeftHalf(boid);
+        private static bool IsTopHalf(Boid boid) => boid.Position.Y < MainGame.ViewportAdapter.BoundingRectangle.Center.Y;
+        private static bool IsBottomHalf(Boid boid) => !IsTopHalf(boid);
 
+        public static void FindNearestBoundsPoints(Boid boid, ref Vector2[] points)
+        {
+            var nearestBoundsX = IsLeftHalf(boid) ? 0f : MainGame.ViewportAdapter.BoundingRectangle.Width;
+            var nearestBoundsY = IsTopHalf(boid) ? 0f : MainGame.ViewportAdapter.BoundingRectangle.Height;
+
+            points[0].X = boid.Position.X;
+            points[0].Y = nearestBoundsY;
+            
+            points[1].X = nearestBoundsX;
+            points[1].Y = boid.Position.Y;
+            
+            points[2].X = nearestBoundsX;
+            points[2].Y = nearestBoundsY;
+        }
+        
         public static void UpdateNearestAvoidedPoints(Boid boid, ref Vector2[] points)
         {
             var viewportBounds = MainGame.ViewportAdapter.BoundingRectangle;

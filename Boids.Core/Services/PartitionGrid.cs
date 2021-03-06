@@ -47,35 +47,29 @@ namespace Boids.Core.Services
             _gridRenderer.Initialize(this);
         }
 
-        public void UpdateActiveCells(IEnumerable<Boid> boids)
+        // public void UpdateActiveCells(IEnumerable<Boid> boids)
+        // {
+        //     _gridRenderer.ClearActiveCells();
+        //     
+        //     foreach (var boid in boids)
+        //     {
+        //         if (!boid.IsActive)
+        //             continue;
+        //         
+        //         ref var cell = ref _gridRenderer.GetCellRef(boid.CellPosition);
+        //         
+        //         cell.IsActive = true;
+        //     }
+        // }
+        
+        public void Draw(GameTime gameTime)
         {
-            _gridRenderer.ClearActiveCells();
-            
-            foreach (var boid in boids)
-            {
-                if (!boid.IsActive)
-                    continue;
-
-                var cellPosition = GetCellPosition(boid.Position);
-                ref var cell = ref _gridRenderer.GetCellRef(cellPosition.X, cellPosition.Y);
-                
-                cell.IsActive = true;
-            }
+            _gridRenderer.Draw(gameTime);
         }
         
-        public void Draw(GameTime gameTime, ViewportAdapter viewportAdapter)
+        public Point GetCellPosition(Vector2 position)
         {
-            _gridRenderer.Draw(gameTime, viewportAdapter);
-        }
-        
-        public Vector2 GetCellPosition(Boid boid)
-        {
-            return new Vector2(boid.Position.X / CellWidth, boid.Position.Y / CellHeight);
-        }
-        
-        public (int X, int Y) GetCellPosition(Vector2 position)
-        {
-            return ((int)(position.X / CellWidth), (int)(position.Y / CellHeight));
+            return new Point((int)(position.X / MainGame.Grid.CellWidth), (int)(position.Y / MainGame.Grid.CellHeight));
         }
     }
 }

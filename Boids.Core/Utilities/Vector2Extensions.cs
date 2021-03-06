@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
+using MonoGame.Extended;
 
 namespace Boids.Core
 {
@@ -14,5 +15,13 @@ namespace Boids.Core
         }
 
         public static float ToRadians(this Vector2 vector) => MathHelper.WrapAngle(MathF.Atan2(vector.Y, vector.X));
+
+        public static Vector2 NextVector2Within(this FastRandom random, ref RectangleF rect)
+        {
+            var x = random.NextSingle(rect.Left, rect.Right);
+            var y = random.NextSingle(rect.Top, rect.Bottom);
+            return new Vector2(x, y);
+        }
+        
     }
 }

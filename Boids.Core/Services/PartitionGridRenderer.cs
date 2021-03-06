@@ -28,6 +28,15 @@ namespace Boids.Core.Services
         {
             return ref _cells[x, y];
         }
+        public ref GridCell GetCellRef(Point position)
+        {
+            return ref _cells[position.X, position.Y];
+        }
+        
+        public ref GridCell GetGridCellRef(Point cellIndices)
+        {
+            return ref _cells[cellIndices.X, cellIndices.Y];
+        }
 
         public void ClearActiveCells()
         {
@@ -92,14 +101,14 @@ namespace Boids.Core.Services
         private Matrix _localProjection;
         private Matrix _localView;
 
-        public void Draw(GameTime gameTime, ViewportAdapter viewportAdapter)
+        public void Draw(GameTime gameTime)
         {
             if (!MainGame.Options.PartitionGrid.Visible)
                 return;
 
             _localProjection = Matrix.CreateOrthographicOffCenter(left: 0f,
-                                                                  right: viewportAdapter.ViewportWidth,
-                                                                  bottom: viewportAdapter.ViewportHeight,
+                                                                  right: MainGame.ViewportAdapter.ViewportWidth,
+                                                                  bottom: MainGame.ViewportAdapter.ViewportHeight,
                                                                   top: 0f,
                                                                   zNearPlane: 0f,
                                                                   zFarPlane: 1f);

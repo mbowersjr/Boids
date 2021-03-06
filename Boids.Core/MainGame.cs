@@ -20,6 +20,7 @@ using Boids.Core.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 using MonoGame.Extended.Input.InputListeners;
 using MonoGame.Extended.ViewportAdapters;
+// ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
 namespace Boids.Core
 {
@@ -222,10 +223,8 @@ namespace Boids.Core
 
         protected override void Update(GameTime gameTime)
         {            
-            var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            
-            _flock.Update(elapsedSeconds);
-            _partitionGrid.UpdateActiveCells(_flock.Boids);
+            _flock.Update(gameTime);
+            // _partitionGrid.UpdateActiveCells(_flock.Boids);
             
             base.Update(gameTime);
         }
@@ -234,9 +233,9 @@ namespace Boids.Core
         {
             GraphicsDevice.Clear(MainGame.Options.Theme.BackgroundColor.Value);
 
-            _partitionGrid.Draw(gameTime, ViewportAdapter);
+            _partitionGrid.Draw(gameTime);
 
-            _flock.Draw(gameTime, _spriteBatch, _spriteFont, ViewportAdapter);
+            _flock.Draw(gameTime, _spriteBatch, _spriteFont);
         }
     }
 }
