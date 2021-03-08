@@ -39,7 +39,6 @@ namespace Boids.Core
         private readonly IInputListenerService _inputListener;
         private readonly CancellationToken _cancellationToken;
         public static ViewportAdapter ViewportAdapter { get; private set; }
-        
         public static BoidsOptions Options { get; set; }
         public static FastRandom Random { get; private set; } = new FastRandom();
         

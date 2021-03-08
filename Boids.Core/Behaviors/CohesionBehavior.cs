@@ -14,7 +14,8 @@ namespace Boids.Core.Behaviors
         public bool Enabled { get; set; }
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
-        
+        public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
+
         
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
@@ -32,9 +33,9 @@ namespace Boids.Core.Behaviors
                     continue;
 
                 // Position distance
-                var distance = Vector2.Distance(other.Position, boid.Position);
+                var distanceSquared = Vector2.DistanceSquared(other.Position, boid.Position);
                 
-                if (distance > 0f && distance < Radius)
+                if (distanceSquared > 0f && distanceSquared < RadiusSquared)
                 {
                     totalForce += other.Position;
                     count++;
@@ -44,7 +45,7 @@ namespace Boids.Core.Behaviors
             if (count > 0)
                 totalForce /= count;
 
-            return totalForce.Length() > 0f ? totalForce : Vector2.Zero;
+            return totalForce.LengthSquared() > 0f ? Vector2.Normalize(totalForce) * (Coefficient ?? 1f) : Vector2.Zero;
         }
     }
 }

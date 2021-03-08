@@ -14,7 +14,8 @@ namespace Boids.Core.Behaviors
         public bool Enabled { get; set; }
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
-
+        public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
+        
         private Vector2[] _avoidedPoints = new Vector2[3];
 
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
@@ -31,7 +32,7 @@ namespace Boids.Core.Behaviors
 
                 if (distance > 0f && distance < Radius)
                 {
-                    var force = Vector2.Normalize(direction) / distance;
+                    var force = direction / distance;
                     totalForce += force;
                     count++;
                 }
@@ -40,7 +41,7 @@ namespace Boids.Core.Behaviors
             if (count > 0)
                 totalForce /= count;
 
-            return totalForce.Length() > 0f ? totalForce : Vector2.Zero;
+            return totalForce.Length() > 0f ? Vector2.Normalize(totalForce * -1) * (Coefficient ?? 1f) : Vector2.Zero;
         }
  
         private static bool IsLeftHalf(Boid boid) => boid.Position.X < MainGame.ViewportAdapter.BoundingRectangle.Center.X;
@@ -50,8 +51,8 @@ namespace Boids.Core.Behaviors
 
         public static void FindNearestBoundsPoints(Boid boid, ref Vector2[] points)
         {
-            var nearestBoundsX = IsLeftHalf(boid) ? 0f : MainGame.ViewportAdapter.BoundingRectangle.Width;
-            var nearestBoundsY = IsTopHalf(boid) ? 0f : MainGame.ViewportAdapter.BoundingRectangle.Height;
+            var nearestBoundsX = IsLeftHalf(boid) ? 0f : MainGame.ViewportAdapter.ViewportWidth;
+            var nearestBoundsY = IsTopHalf(boid) ? 0f : MainGame.ViewportAdapter.ViewportHeight;
 
             points[0].X = boid.Position.X;
             points[0].Y = nearestBoundsY;
@@ -63,19 +64,19 @@ namespace Boids.Core.Behaviors
             points[2].Y = nearestBoundsY;
         }
         
-        public static void UpdateNearestAvoidedPoints(Boid boid, ref Vector2[] points)
-        {
-            var viewportBounds = MainGame.ViewportAdapter.BoundingRectangle;
-            
-            var nearestBoundsX = (boid.Position.X / 2f < viewportBounds.Center.X / 2f) ? 0f : viewportBounds.Width;
-            var nearestBoundsY = (boid.Position.Y / 2f < viewportBounds.Center.Y / 2f) ? 0f : viewportBounds.Height;
-
-            points[0].X = boid.Position.X;
-            points[0].Y = nearestBoundsY;
-            points[1].X = nearestBoundsX;
-            points[1].Y = boid.Position.Y;
-            points[2].X = nearestBoundsX;
-            points[2].Y = nearestBoundsY;
-        }
+        // public static void UpdateNearestAvoidedPoints(Boid boid, ref Vector2[] points)
+        // {
+        //     var viewportBounds = MainGame.ViewportAdapter.BoundingRectangle;
+        //     
+        //     var nearestBoundsX = (boid.Position.X / 2f < viewportBounds.Center.X / 2f) ? 0f : viewportBounds.Width;
+        //     var nearestBoundsY = (boid.Position.Y / 2f < viewportBounds.Center.Y / 2f) ? 0f : viewportBounds.Height;
+        //
+        //     points[0].X = boid.Position.X;
+        //     points[0].Y = nearestBoundsY;
+        //     points[1].X = nearestBoundsX;
+        //     points[1].Y = boid.Position.Y;
+        //     points[2].X = nearestBoundsX;
+        //     points[2].Y = nearestBoundsY;
+        // }
     }
 }

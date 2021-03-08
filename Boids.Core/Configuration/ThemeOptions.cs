@@ -21,14 +21,20 @@ namespace Boids.Core.Configuration
         public string AvoidedPointActiveLine { get; set; }
         public Lazy<Color> AvoidedPointActiveLineColor => new Lazy<Color>(() => ConvertToColor(AvoidedPointActiveLine));
 
+        public string DistanceReferenceCircle { get; set; }
+        public Lazy<Color> DistanceReferenceCircleColor => new Lazy<Color>(() => ConvertToColor(DistanceReferenceCircle));
+
         public string Boid { get; set; }
         public Lazy<Color> BoidColor => new Lazy<Color>(() => ConvertToColor(Boid));
 
-        public string BoidPropertiesText { get; set; }
-        public Lazy<Color> BoidPropertiesTextColor => new Lazy<Color>(() => ConvertToColor(BoidPropertiesText));
-
         public string BoidDirectionLine { get; set; }
         public Lazy<Color> BoidDirectionLineColor => new Lazy<Color>(() => ConvertToColor(BoidDirectionLine));
+
+        public string BoidForceLine { get; set; }
+        public Lazy<Color> BoidForceLineColor => new Lazy<Color>(() => ConvertToColor(BoidForceLine));
+
+        public string BoidPropertiesText { get; set; }
+        public Lazy<Color> BoidPropertiesTextColor => new Lazy<Color>(() => ConvertToColor(BoidPropertiesText));
 
         private static Color ConvertToColor(string optionsValue)
         {

@@ -95,13 +95,9 @@ namespace Boids.Core.Entities
                         continue;
 
                     var force = behavior.Perform(boid, Boids);
-                    
-                    // if (behavior.Coefficient != null && MainGame.Options.IgnoreBehaviorCoefficients != true)
-                    //     force *= behavior.Coefficient.Value;
-
                     boid.ApplyForce(force);
                 }
-
+                
                 boid.Update(gameTime);
             }
         }

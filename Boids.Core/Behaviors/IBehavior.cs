@@ -10,6 +10,7 @@ namespace Boids.Core.Behaviors
         bool Enabled { get; set; }
         float? Coefficient { get; set; }
         float? Radius { get; set; }
+        float? RadiusSquared { get; }
         
         Vector2 Perform(Boid boid, IEnumerable<Boid> boids);
     }

@@ -32,6 +32,7 @@ namespace Boids.Core.Entities
         private Vector2 _acceleration;
         public Vector2 Acceleration { get => _acceleration; set => _acceleration = value; }
 
+        public Vector2 PreviousAcceleration { get; set; }
         public bool IsActive { get; set; }
 
         private readonly Flock _flock;
@@ -47,6 +48,11 @@ namespace Boids.Core.Entities
                               blendState: BlendState.NonPremultiplied,
                               sortMode: SpriteSortMode.Immediate,
                               transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
+
+            if (MainGame.Options.DisplayDistanceReferenceCircles)
+            {
+                DrawDistanceReferenceCircles(spriteBatch);
+            }
             
             DrawBoid(spriteBatch);
 
@@ -75,8 +81,6 @@ namespace Boids.Core.Entities
             //                  effects: SpriteEffects.None,
             //                  layerDepth: 0f);
             
-            DrawDistanceReferenceCircles(spriteBatch);
-            
             spriteBatch.DrawCircle(center: Position, 
                                    radius: BoidRadius, 
                                    sides: 32, 
@@ -91,18 +95,23 @@ namespace Boids.Core.Entities
                                  thickness: 2f,
                                  layerDepth: 1f);
 
+            if (PreviousAcceleration != Vector2.Zero)
+            {
+                spriteBatch.DrawLine(point1: Position,
+                                     point2: Position + PreviousAcceleration,
+                                     color: MainGame.Options.Theme.BoidForceLineColor.Value,
+                                     thickness: 2f,
+                                     layerDepth: 0f);
+            }
         }
 
-        private static readonly float[] _radii = new[] { 25f, 50f, 75f, 100f, 200f }; 
+        private static readonly float[] _distances = new[] { 25f, 50f, 100f, 200f }; 
         private void DrawDistanceReferenceCircles(SpriteBatch spriteBatch)
         {
-            if (!MainGame.Options.DisplayDistanceReferenceCircles)
-                return;
-            
-            foreach (var radius in _radii)
+            foreach (var distance in _distances)
             {
                 spriteBatch.DrawCircle(center: Position,
-                                       radius: radius,
+                                       radius: distance,
                                        sides: 32,
                                        color: MainGame.Options.Theme.AvoidedPointLineColor.Value,
                                        thickness: 1f,
@@ -121,22 +130,19 @@ namespace Boids.Core.Entities
             foreach (var point in avoidedPoints)
             {
                 var direction = Position - point;
-                var distance = direction.Length();
+                var distanceSquared = direction.LengthSquared();
 
-                var pointIsActive = distance > 0f && distance < _avoidPointsBehavior.Radius;
+                var pointIsActive = distanceSquared > 0f && distanceSquared < _avoidPointsBehavior.RadiusSquared;
                 
-                var lineColor = pointIsActive 
+                var lineColor = pointIsActive && MainGame.Options.AvoidedPointsDisplay.HighlightActivePoints 
                     ? MainGame.Options.Theme.AvoidedPointActiveLineColor.Value 
                     : MainGame.Options.Theme.AvoidedPointLineColor.Value;
 
-                if (pointIsActive && MainGame.Options.AvoidedPointsDisplay.HighlightActivePoints)
-                {
-                    spriteBatch.DrawLine(point1: Position,
-                                         point2: point,
-                                         color: lineColor,
-                                         thickness: 2f,
-                                         layerDepth: 2f);
-                }
+                spriteBatch.DrawLine(point1: Position,
+                                     point2: point,
+                                     color: lineColor,
+                                     thickness: 2f,
+                                     layerDepth: 0f);
             }
         }
         
@@ -165,6 +171,8 @@ namespace Boids.Core.Entities
                 return;
 
             var elapsedSeconds = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            PreviousAcceleration = Acceleration;
             
             Velocity += Acceleration * elapsedSeconds;
             Velocity = Velocity.Truncate(MainGame.Options.Limits.MaxVelocity);
@@ -175,7 +183,7 @@ namespace Boids.Core.Entities
             
             //CellPosition = MainGame.Grid.GetCellPosition(Position);
 
-            // if (!MainGame.ViewportAdapter.BoundingRectangle.Contains(Position)) 
+            // if (!MainGame.ViewportAdapter.BoundingRectangle.Contains(Position))
             //     IsActive = false;
         }
 
@@ -183,13 +191,15 @@ namespace Boids.Core.Entities
         {
             // Implements Reynolds steering formula: steering force = desired velocity - current velocity
             // Reference: Nature of Code, chapter 6.3 (https://natureofcode.com/book/chapter-6-autonomous-agents/)
-            
-            force.Normalize();
-            force *= MainGame.Options.Limits.MaxVelocity;
-            force -= Velocity;
-            force = force.Truncate(MainGame.Options.Limits.MaxForce);
 
-            Acceleration += force;
+            var desiredVelocity = force;
+            desiredVelocity.Normalize();
+            desiredVelocity *= MainGame.Options.Limits.MaxVelocity;
+
+            var adjustment = desiredVelocity - Velocity;
+            adjustment = adjustment.Truncate(MainGame.Options.Limits.MaxForce);
+            
+            Acceleration += adjustment;
         }
 
         // public void Seek(Vector2 target)

@@ -14,12 +14,13 @@ namespace Boids.Core.Behaviors
         public bool Enabled { get; set; }
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
+        public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
 
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
             // Steers towards the average velocity of all nearby boids
             
-            var totalForce = new Vector2();
+            var totalForce = Vector2.Zero;
             var count = 0;
 
             foreach (var other in boids)
@@ -31,8 +32,8 @@ namespace Boids.Core.Behaviors
                     continue;
 
                 // Position distance
-                var distance = Vector2.Distance(boid.Position, other.Position);
-                if (distance > 0f && distance < Radius)
+                var distanceSquared = Vector2.DistanceSquared(boid.Position, other.Position);
+                if (distanceSquared > 0f && distanceSquared < RadiusSquared)
                 {
                     totalForce += other.Velocity;
                     count++;
@@ -42,7 +43,7 @@ namespace Boids.Core.Behaviors
             if (count > 0) 
                 totalForce /= count;
 
-            return totalForce.Length() > 0f ? totalForce : Vector2.Zero;
+            return totalForce != Vector2.Zero ? Vector2.Normalize(totalForce) * (Coefficient ?? 1f) : Vector2.Zero;
         }
     }
 }

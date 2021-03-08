@@ -14,7 +14,8 @@ namespace Boids.Core.Behaviors
         public bool Enabled { get; set; }
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
-        
+        public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
+
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
             // Steers away from nearby neighbors, weighting force applied by distance
@@ -32,11 +33,11 @@ namespace Boids.Core.Behaviors
 
                 // Position distance
                 var direction = boid.Position - other.Position;
-                var distance = direction.Length();
+                var distanceSquared = direction.LengthSquared();
 
-                if (distance > 0f && distance < Radius)
+                if (distanceSquared > 0f && distanceSquared < RadiusSquared)
                 {
-                    var force = Vector2.Normalize(direction) / distance;
+                    var force = direction / distanceSquared;
                     totalForce += force;
                     count++;
                 }
@@ -45,7 +46,7 @@ namespace Boids.Core.Behaviors
             if (count > 0)
                 totalForce /= count;
 
-            return totalForce.Length() > 0f ? totalForce : Vector2.Zero;
+            return totalForce.LengthSquared() > 0f ?  Vector2.Normalize(totalForce * -1f) * (Coefficient ?? 1f) : Vector2.Zero;
         }
     }
 }
