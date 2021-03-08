@@ -37,15 +37,18 @@ namespace Boids.Core.Behaviors
 
                 if (distanceSquared < RadiusSquared)
                 {
-                    totalForce += direction;
+                    var scale = 1f - direction.Length() / Radius.Value;
+                    totalForce += Vector2.Normalize(direction) / scale;
                     count++;
                 }
             }
 
             if (count > 1)
+            {
                 totalForce /= count;
+            }
 
-            return totalForce != Vector2.Zero ? totalForce * (Coefficient ?? 1f) : Vector2.Zero;
+            return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
         }
     }
 }

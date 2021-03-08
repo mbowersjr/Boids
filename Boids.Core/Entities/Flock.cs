@@ -95,6 +95,8 @@ namespace Boids.Core.Entities
                         continue;
 
                     var force = behavior.Perform(boid, Boids);
+                    force *= behavior.Coefficient.GetValueOrDefault();
+                    
                     boid.ApplyForce(force);
                 }
                 

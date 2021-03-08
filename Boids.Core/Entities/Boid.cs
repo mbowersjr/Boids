@@ -48,22 +48,23 @@ namespace Boids.Core.Entities
                               blendState: BlendState.NonPremultiplied,
                               sortMode: SpriteSortMode.Immediate,
                               transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
-
-            if (MainGame.Options.DisplayDistanceReferenceCircles)
-            {
-                DrawDistanceReferenceCircles(spriteBatch);
-            }
             
             DrawBoid(spriteBatch);
 
-            if (MainGame.Options.AvoidedPointsDisplay.NearestPoints)
+            if (MainGame.Options.DisplayDebugData)
             {
-                DrawAvoidedPointLines(spriteBatch);
-            }
-
-            if (MainGame.Options.DisplayBoidPropertiesText)
-            {
-                DrawBoidPropertiesText(spriteBatch, spriteFont);
+                if (MainGame.Options.DisplayDistanceReferenceCircles)
+                {
+                    DrawDistanceReferenceCircles(spriteBatch);
+                }
+                if (MainGame.Options.AvoidedPointsDisplay.NearestPoints)
+                {
+                    DrawAvoidedPointLines(spriteBatch);
+                }
+                if (MainGame.Options.DisplayBoidPropertiesText)
+                {
+                    DrawBoidPropertiesText(spriteBatch, spriteFont);
+                }
             }
 
             spriteBatch.End();
@@ -95,7 +96,7 @@ namespace Boids.Core.Entities
                                  thickness: 2f,
                                  layerDepth: 1f);
 
-            if (PreviousAcceleration != Vector2.Zero)
+            if (MainGame.Options.DisplayDebugData)
             {
                 spriteBatch.DrawLine(point1: Position,
                                      point2: Position + PreviousAcceleration,
@@ -157,12 +158,18 @@ namespace Boids.Core.Entities
             _sb.AppendFormat("R: {0:N3} rad.   \n", Rotation);
 
             var textSize = spriteFont.MeasureString(_sb);
+            var textOrigin = new Vector2(textSize.X / 2f, 0f);
             var textPosition = new Vector2(Position.X - textSize.X / 2f, Position.Y + 15f);
 
             spriteBatch.DrawString(spriteFont: spriteFont,
                                    text: _sb,
                                    position: textPosition,
-                                   color: MainGame.Options.Theme.BoidPropertiesTextColor.Value);
+                                   color: MainGame.Options.Theme.BoidPropertiesTextColor.Value,
+                                   rotation: 0f,
+                                   origin: Vector2.One,
+                                   scale: 1f,
+                                   effects: SpriteEffects.None,
+                                   layerDepth: 0f);
         }
         
         public void Update(GameTime gameTime)
@@ -180,11 +187,29 @@ namespace Boids.Core.Entities
             Position += Velocity * elapsedSeconds;
             Rotation = Velocity.ToRadians();
             Acceleration = Vector2.Zero;
-            
-            //CellPosition = MainGame.Grid.GetCellPosition(Position);
 
-            // if (!MainGame.ViewportAdapter.BoundingRectangle.Contains(Position))
-            //     IsActive = false;
+            WrapAroundViewportEdges();
+        }
+
+        private void WrapAroundViewportEdges()
+        {
+            if (_position.X < 0f)
+            {
+                _position.X = MainGame.ViewportAdapter.BoundingRectangle.Right;
+            }
+            else if (_position.X > MainGame.ViewportAdapter.BoundingRectangle.Right)
+            {
+                _position.X = 0f;
+            }
+
+            if (_position.Y < 0f)
+            {
+                _position.Y = MainGame.ViewportAdapter.BoundingRectangle.Bottom;
+            }
+            else if (_position.Y > MainGame.ViewportAdapter.BoundingRectangle.Bottom)
+            {
+                _position.Y = 0f;
+            }
         }
 
         public void ApplyForce(Vector2 force)

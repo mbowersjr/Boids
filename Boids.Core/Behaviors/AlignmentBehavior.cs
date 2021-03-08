@@ -31,21 +31,22 @@ namespace Boids.Core.Behaviors
                 if (!other.IsActive)
                     continue;
 
-                // Position distance
-                var direction = boid.Position - other.Position;
-                var distanceSquared = direction.LengthSquared();
+                var distanceSquared = Vector2.DistanceSquared(boid.Position, other.Position);
                 
-                if (distanceSquared > 0f && distanceSquared < RadiusSquared)
+                if (distanceSquared < RadiusSquared)
                 {
-                    totalForce += other.Position + other.Velocity;
+                    totalForce += other.Velocity;
                     count++;
                 }
             }
 
-            if (count > 0) 
+            if (count > 0)
+            {
                 totalForce /= count;
+                totalForce.Normalize();
+            }
 
-            return totalForce != Vector2.Zero ? totalForce * (Coefficient ?? 1f) : Vector2.Zero;
+            return totalForce;
         }
     }
 }

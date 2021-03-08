@@ -21,7 +21,8 @@ namespace Boids.Core.Behaviors
         {
             // Steers toward the average position of all nearby boids
             
-            var totalForce = Vector2.Zero;
+            var desiredPosition = Vector2.Zero;
+            var averagePositions = Vector2.Zero;
             var count = 0;
 
             foreach (var other in boids)
@@ -32,21 +33,24 @@ namespace Boids.Core.Behaviors
                 if (!other.IsActive)
                     continue;
 
-                // Position distance
-                var direction = other.Position - boid.Position;
-                var distanceSquared = direction.LengthSquared();
+                var distanceSquared = Vector2.DistanceSquared(boid.Position, other.Position);
                 
-                if (distanceSquared > 0f && distanceSquared < RadiusSquared)
+                if (distanceSquared < RadiusSquared)
                 {
-                    totalForce += direction;
+                    averagePositions += other.Position;
                     count++;
                 }
             }
 
             if (count > 0)
-                totalForce /= count;
+            {
+                averagePositions /= count;
+                
+                desiredPosition = averagePositions - boid.Position;
+                desiredPosition.Normalize();
+            }
 
-            return totalForce != Vector2.Zero ? totalForce * (Coefficient ?? 1f) : Vector2.Zero;
+            return desiredPosition;
         }
     }
 }
