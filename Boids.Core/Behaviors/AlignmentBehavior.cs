@@ -32,10 +32,12 @@ namespace Boids.Core.Behaviors
                     continue;
 
                 // Position distance
-                var distanceSquared = Vector2.DistanceSquared(boid.Position, other.Position);
+                var direction = boid.Position - other.Position;
+                var distanceSquared = direction.LengthSquared();
+                
                 if (distanceSquared > 0f && distanceSquared < RadiusSquared)
                 {
-                    totalForce += other.Velocity;
+                    totalForce += other.Position + other.Velocity;
                     count++;
                 }
             }
@@ -43,7 +45,7 @@ namespace Boids.Core.Behaviors
             if (count > 0) 
                 totalForce /= count;
 
-            return totalForce != Vector2.Zero ? Vector2.Normalize(totalForce) * (Coefficient ?? 1f) : Vector2.Zero;
+            return totalForce != Vector2.Zero ? totalForce * (Coefficient ?? 1f) : Vector2.Zero;
         }
     }
 }

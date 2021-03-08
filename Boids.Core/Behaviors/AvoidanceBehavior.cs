@@ -20,7 +20,7 @@ namespace Boids.Core.Behaviors
         {
             // Steers away from nearby neighbors, weighting force applied by distance
             
-            var totalForce = new Vector2();
+            var totalForce = Vector2.Zero;
             var count = 0;
 
             foreach (var other in boids)
@@ -35,18 +35,17 @@ namespace Boids.Core.Behaviors
                 var direction = boid.Position - other.Position;
                 var distanceSquared = direction.LengthSquared();
 
-                if (distanceSquared > 0f && distanceSquared < RadiusSquared)
+                if (distanceSquared < RadiusSquared)
                 {
-                    var force = direction / distanceSquared;
-                    totalForce += force;
+                    totalForce += direction;
                     count++;
                 }
             }
 
-            if (count > 0)
+            if (count > 1)
                 totalForce /= count;
 
-            return totalForce.LengthSquared() > 0f ?  Vector2.Normalize(totalForce * -1f) * (Coefficient ?? 1f) : Vector2.Zero;
+            return totalForce != Vector2.Zero ? totalForce * (Coefficient ?? 1f) : Vector2.Zero;
         }
     }
 }

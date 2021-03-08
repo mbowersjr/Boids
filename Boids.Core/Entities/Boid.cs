@@ -192,7 +192,7 @@ namespace Boids.Core.Entities
             // Implements Reynolds steering formula: steering force = desired velocity - current velocity
             // Reference: Nature of Code, chapter 6.3 (https://natureofcode.com/book/chapter-6-autonomous-agents/)
 
-            var desiredVelocity = force;
+            var desiredVelocity = Velocity + force;
             desiredVelocity.Normalize();
             desiredVelocity *= MainGame.Options.Limits.MaxVelocity;
 

@@ -28,12 +28,12 @@ namespace Boids.Core.Behaviors
             var distanceSquared = direction.LengthSquared();
 
             Vector2 force = Vector2.Zero;
-            if (distanceSquared > 0f && distanceSquared < RadiusSquared)
+            if (distanceSquared < RadiusSquared)
             {
                 force = direction;
             }
 
-            return force != Vector2.Zero ? Vector2.Normalize(force) * (Coefficient ?? 1f) : Vector2.Zero;
+            return force != Vector2.Zero ? force * (Coefficient ?? 1f) : Vector2.Zero;
         }
     }
 }
