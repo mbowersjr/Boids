@@ -71,7 +71,11 @@ namespace Boids.Core.Services
                 for (var y = 0; y < _parentPartitionGrid.CellCountY; y++)
                 {
                     var cell = new GridCell();
-                    cell.Bounds = new Rectangle(x * _parentPartitionGrid.CellWidth, y * _parentPartitionGrid.CellHeight, _parentPartitionGrid.CellWidth, _parentPartitionGrid.CellHeight);
+                    cell.Bounds = new RectangleF(x: x * _parentPartitionGrid.CellWidth,
+                                                 y: y * _parentPartitionGrid.CellHeight, 
+                                                 width: _parentPartitionGrid.CellWidth,
+                                                 height: _parentPartitionGrid.CellHeight);
+                    cell.Position = (Vector2)cell.Bounds.Position;
                     _cells[x,y] = cell;
                 }
             }
@@ -112,7 +116,6 @@ namespace Boids.Core.Services
                                                                   top: 0f,
                                                                   zNearPlane: 0f,
                                                                   zFarPlane: 1f);
-            // _localProjection = Matrix.CreateOrthographicOffCenter(0f, _parentPartitionGrid.ViewportWidth, _parentPartitionGrid.ViewportHeight, 0f, 0f, 1f);
             _localView = Matrix.Identity;
 
             _primitiveBatch.Begin(ref _localProjection, ref _localView);
@@ -121,7 +124,9 @@ namespace Boids.Core.Services
             {
                 for (var i = 0; i < _gridPoints.Length; i++)
                 {
-                    _primitiveDrawing.DrawSegment(_gridPoints[i].Item1, _gridPoints[i].Item2, MainGame.Options.Theme.PartitionGridLineColor.Value);
+                    _primitiveDrawing.DrawSegment(start: _gridPoints[i].Item1, 
+                                                  end: _gridPoints[i].Item2,
+                                                  color: MainGame.Options.Theme.PartitionGridLineColor.Value);
                 }
             }
 
@@ -133,10 +138,10 @@ namespace Boids.Core.Services
                     {
                         if (_cells[x, y].IsActive)
                         {
-                            _primitiveDrawing.DrawSolidRectangle(_cells[x, y].Bounds.Position,
-                                                                 _cells[x, y].Bounds.Width,
-                                                                 _cells[x, y].Bounds.Height,
-                                                                 MainGame.Options.Theme.PartitionGridHighlightColor.Value);
+                            _primitiveDrawing.DrawSolidRectangle(location: _cells[x, y].Position,
+                                                                 width: _cells[x, y].Bounds.Width,
+                                                                 height: _cells[x, y].Bounds.Height,
+                                                                 color: MainGame.Options.Theme.PartitionGridHighlightColor.Value);
                         }
                     }
                 }
@@ -149,6 +154,7 @@ namespace Boids.Core.Services
         {
             public bool IsActive;
             public RectangleF Bounds;
+            public Vector2 Position;
         }
     }
     
