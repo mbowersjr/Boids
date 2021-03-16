@@ -20,7 +20,7 @@ namespace Boids.Core.Behaviors
 
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
-            var totalForce = new Vector2();
+            var totalForce = Vector2.Zero;
             var count = 0;
 
             FindNearestBoundsPoints(boid, ref _avoidedPoints);
@@ -28,20 +28,22 @@ namespace Boids.Core.Behaviors
             foreach (var point in _avoidedPoints)
             {
                 var direction = boid.Position - point;
-                var distance = direction.Length();
+                var distanceSquared = direction.LengthSquared();
 
-                if (distance > 0f && distance < Radius)
+                if (distanceSquared < RadiusSquared)
                 {
-                    var force = direction / distance;
-                    totalForce += force;
+                    var scale = 1f - direction.Length() / Radius.Value;
+                    totalForce += Vector2.Normalize(direction) / scale;
                     count++;
                 }
             }
 
             if (count > 0)
+            {
                 totalForce /= count;
+            }
 
-            return totalForce.Length() > 0f ? Vector2.Normalize(totalForce * -1) * (Coefficient ?? 1f) : Vector2.Zero;
+            return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
         }
  
         private static bool IsLeftHalf(Boid boid) => boid.Position.X < MainGame.ViewportAdapter.BoundingRectangle.Center.X;

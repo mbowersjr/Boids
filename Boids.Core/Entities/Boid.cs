@@ -57,7 +57,7 @@ namespace Boids.Core.Entities
                 {
                     DrawDistanceReferenceCircles(spriteBatch);
                 }
-                if (MainGame.Options.AvoidedPointsDisplay.NearestPoints)
+                if (MainGame.Options.AvoidedPointsDisplay.Enabled)
                 {
                     DrawAvoidedPointLines(spriteBatch);
                 }
@@ -133,12 +133,23 @@ namespace Boids.Core.Entities
                 var direction = Position - point;
                 var distanceSquared = direction.LengthSquared();
 
-                var pointIsActive = distanceSquared > 0f && distanceSquared < _avoidPointsBehavior.RadiusSquared;
-                
-                var lineColor = pointIsActive && MainGame.Options.AvoidedPointsDisplay.HighlightActivePoints 
-                    ? MainGame.Options.Theme.AvoidedPointActiveLineColor.Value 
-                    : MainGame.Options.Theme.AvoidedPointLineColor.Value;
+                var pointIsActive = distanceSquared < _avoidPointsBehavior.RadiusSquared;
 
+                Color lineColor;
+                
+                if (MainGame.Options.AvoidedPointsDisplay.ActivePoints && pointIsActive)
+                {
+                    lineColor = MainGame.Options.Theme.AvoidedPointActiveLineColor.Value;
+                }
+                else if (MainGame.Options.AvoidedPointsDisplay.NearestPoints)
+                {
+                    lineColor = MainGame.Options.Theme.AvoidedPointLineColor.Value;
+                }
+                else
+                {
+                    continue;
+                }
+                
                 spriteBatch.DrawLine(point1: Position,
                                      point2: point,
                                      color: lineColor,

@@ -29,7 +29,9 @@ namespace Boids.Core.Configuration
     public class AvoidedPointsDisplayOptions
     {
         public bool NearestPoints { get; set; }
-        public bool HighlightActivePoints { get; set; }
+        public bool ActivePoints { get; set; }
+
+        public bool Enabled => NearestPoints || ActivePoints;
     }
     
     public class BoidsOptions
