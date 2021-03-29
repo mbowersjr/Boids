@@ -21,9 +21,6 @@
   </ItemGroup>  
   <ItemGroup>
     <MonoGameContentReference Include="**\*.mgcb" />
-  </ItemGroup>  
-  <ItemGroup>
-    <None Remove="Boids.Core.csproj.DotSettings" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">

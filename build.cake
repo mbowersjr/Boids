@@ -16,7 +16,7 @@ var configuration = Argument("configuration", "Debug");
 Task("Build")
     .Does(context =>
 {
-    DotNetCoreBuild("./Boids.Core.sln", new DotNetCoreBuildSettings() {
+    DotNetCoreBuild("./src/Boids.Core.sln", new DotNetCoreBuildSettings() {
     	Configuration = configuration,
         NoIncremental = context.HasArgument("rebuild"),
         MSBuildSettings = new DotNetCoreMSBuildSettings()
@@ -28,7 +28,7 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(context =>
 {
-    DotNetCoreTest("./Boids.Core.Tests/Boids.Core.Tests.csproj", new DotNetCoreTestSettings {
+    DotNetCoreTest("./tests/Boids.Core.Tests/Boids.Core.Tests.csproj", new DotNetCoreTestSettings {
         Configuration = configuration,
         NoRestore = true,
         NoBuild = true
