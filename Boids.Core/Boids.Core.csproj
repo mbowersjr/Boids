@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
@@ -9,19 +8,22 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <StartupObject>Boids.Core.Program</StartupObject>
     <IsPackable>false</IsPackable>
-  </PropertyGroup>  
-  <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>  
+  </PropertyGroup>
   <ItemGroup>
-    <None Remove="Icon.ico" />
-    <None Remove="Icon.bmp" />
-    <None Remove="Content\Content.mgcb" />
-  </ItemGroup>
+    <Compile Remove="Content\bin\**" />
+    <Compile Remove="Content\obj\**" />
+    <EmbeddedResource Remove="Content\bin\**" />
+    <EmbeddedResource Remove="Content\obj\**" />
+    <None Remove="Content\bin\**" />
+    <None Remove="Content\obj\**" />
+  </ItemGroup>  
   <ItemGroup>
-    <EmbeddedResource Include="Icon.ico" />
-    <EmbeddedResource Include="Icon.bmp" />
+    <MonoGameContentReference Include="**\*.mgcb" />
+  </ItemGroup>  
+  <ItemGroup>
+    <None Remove="Boids.Core.csproj.DotSettings" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
@@ -43,6 +45,5 @@
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.0.1641" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20574.7" />
-  </ItemGroup>
-  
+  </ItemGroup>  
 </Project>
