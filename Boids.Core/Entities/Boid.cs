@@ -169,7 +169,7 @@ namespace Boids.Core.Entities
             _sb.AppendFormat("R: {0:N3} rad.   \n", Rotation);
 
             var textSize = spriteFont.MeasureString(_sb);
-            var textOrigin = new Vector2(textSize.X / 2f, 0f);
+            var textOrigin = Vector2.One; // new Vector2(textSize.X / 2f, 0f);
             var textPosition = new Vector2(Position.X - textSize.X / 2f, Position.Y + 15f);
 
             spriteBatch.DrawString(spriteFont: spriteFont,
@@ -177,7 +177,7 @@ namespace Boids.Core.Entities
                                    position: textPosition,
                                    color: MainGame.Options.Theme.BoidPropertiesTextColor.Value,
                                    rotation: 0f,
-                                   origin: Vector2.One,
+                                   origin: textOrigin,
                                    scale: 1f,
                                    effects: SpriteEffects.None,
                                    layerDepth: 0f);

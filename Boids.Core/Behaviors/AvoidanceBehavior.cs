@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using Boids.Core.Entities;
@@ -7,6 +8,7 @@ using Boids.Core;
 
 namespace Boids.Core.Behaviors
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     // ReSharper disable once UnusedType.Global
     public class AvoidanceBehavior : IBehavior
     {
@@ -31,12 +33,13 @@ namespace Boids.Core.Behaviors
                 if (!other.IsActive)
                     continue;
 
-                // Position distance
                 var direction = boid.Position - other.Position;
                 var distanceSquared = direction.LengthSquared();
 
                 if (distanceSquared < RadiusSquared)
                 {
+                    Debug.Assert(Radius != null, nameof(Radius) + " != null");
+                    
                     var scale = 1f - direction.Length() / Radius.Value;
                     totalForce += Vector2.Normalize(direction) / scale;
                     count++;

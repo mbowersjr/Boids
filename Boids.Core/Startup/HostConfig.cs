@@ -10,7 +10,7 @@ namespace Boids.Core.Startup
         {
             hostConfig.SetBasePath(Directory.GetCurrentDirectory());
             hostConfig.AddJsonFile("hostsettings.json", optional: true);
-            hostConfig.AddEnvironmentVariables(prefix: "BOIDS_"); ;
+            hostConfig.AddEnvironmentVariables(prefix: "BOIDS_");
             hostConfig.AddCommandLine(Environment.GetCommandLineArgs());
         }
     }

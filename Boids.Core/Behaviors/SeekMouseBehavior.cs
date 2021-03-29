@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Boids.Core.Behaviors
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     // ReSharper disable once UnusedType.Global
     public class SeekMouseBehavior : IBehavior
     {
@@ -20,6 +21,7 @@ namespace Boids.Core.Behaviors
         public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
 
         private MouseState _mouseState;
+        
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
             _mouseState = Mouse.GetState();
@@ -27,13 +29,14 @@ namespace Boids.Core.Behaviors
             var direction = _mouseState.Position.ToVector2() - boid.Position;
             var distanceSquared = direction.LengthSquared();
 
-            Vector2 force = Vector2.Zero;
+            var totalForce = Vector2.Zero;
+            
             if (distanceSquared < RadiusSquared)
             {
-                force = direction;
+                totalForce = direction;
             }
 
-            return force != Vector2.Zero ? force * (Coefficient ?? 1f) : Vector2.Zero;
+            return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
         }
     }
 }

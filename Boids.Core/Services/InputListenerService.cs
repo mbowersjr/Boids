@@ -23,6 +23,7 @@ namespace Boids.Core.Services
         public MouseListener MouseListener { get; private set; }
         public KeyboardListener KeyboardListener { get; private set; }
         public GamePadListener GamePadListener { get; private set; }
+        
         private MainGame _game;
         private readonly ILogger<IInputListenerService> _logger;
         

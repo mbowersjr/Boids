@@ -75,7 +75,7 @@ namespace Boids.Core.Services
                                                  y: y * _parentPartitionGrid.CellHeight, 
                                                  width: _parentPartitionGrid.CellWidth,
                                                  height: _parentPartitionGrid.CellHeight);
-                    cell.Position = (Vector2)cell.Bounds.Position;
+                    cell.Position = cell.Bounds.Position;
                     _cells[x,y] = cell;
                 }
             }

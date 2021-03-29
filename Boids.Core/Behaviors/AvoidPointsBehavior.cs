@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 using Boids.Core.Entities;
@@ -8,6 +9,7 @@ using Boids.Core;
 namespace Boids.Core.Behaviors
 {
     // ReSharper disable once ClassNeverInstantiated.Global
+    // ReSharper disable once UnusedType.Global
     public class AvoidPointsBehavior : IBehavior
     {
         public string Name => "AvoidPoints";
@@ -32,6 +34,8 @@ namespace Boids.Core.Behaviors
 
                 if (distanceSquared < RadiusSquared)
                 {
+                    Debug.Assert(Radius != null, nameof(Radius) + " != null");
+                    
                     var scale = 1f - direction.Length() / Radius.Value;
                     totalForce += Vector2.Normalize(direction) / scale;
                     count++;
@@ -46,10 +50,14 @@ namespace Boids.Core.Behaviors
             return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
         }
  
+        // ReSharper disable UnusedMember.Local
+        
         private static bool IsLeftHalf(Boid boid) => boid.Position.X < MainGame.ViewportAdapter.BoundingRectangle.Center.X;
         private static bool IsRightHalf(Boid boid) => !IsLeftHalf(boid);
         private static bool IsTopHalf(Boid boid) => boid.Position.Y < MainGame.ViewportAdapter.BoundingRectangle.Center.Y;
         private static bool IsBottomHalf(Boid boid) => !IsTopHalf(boid);
+        
+        // ReSharper restore UnusedMember.Local
 
         public static void FindNearestBoundsPoints(Boid boid, ref Vector2[] points)
         {
@@ -65,20 +73,5 @@ namespace Boids.Core.Behaviors
             points[2].X = nearestBoundsX;
             points[2].Y = nearestBoundsY;
         }
-        
-        // public static void UpdateNearestAvoidedPoints(Boid boid, ref Vector2[] points)
-        // {
-        //     var viewportBounds = MainGame.ViewportAdapter.BoundingRectangle;
-        //     
-        //     var nearestBoundsX = (boid.Position.X / 2f < viewportBounds.Center.X / 2f) ? 0f : viewportBounds.Width;
-        //     var nearestBoundsY = (boid.Position.Y / 2f < viewportBounds.Center.Y / 2f) ? 0f : viewportBounds.Height;
-        //
-        //     points[0].X = boid.Position.X;
-        //     points[0].Y = nearestBoundsY;
-        //     points[1].X = nearestBoundsX;
-        //     points[1].Y = boid.Position.Y;
-        //     points[2].X = nearestBoundsX;
-        //     points[2].Y = nearestBoundsY;
-        // }
     }
 }
