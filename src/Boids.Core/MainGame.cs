@@ -3,23 +3,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extended;
+using MonoGame.Extended.Input.InputListeners;
+using MonoGame.Extended.ViewportAdapters;
 using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
-using Microsoft.Extensions.Configuration.Json;
-using MonoGame.Extended.Input.InputListeners;
-using MonoGame.Extended.ViewportAdapters;
+using Microsoft.Extensions.DependencyInjection;
+
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
 
 namespace Boids.Core
@@ -30,84 +26,74 @@ namespace Boids.Core
         private SpriteBatch _spriteBatch;
         public static GraphicsDeviceManager Graphics { get; private set; }
         
-        public static PartitionGrid Grid => _partitionGrid;
-        private static PartitionGrid _partitionGrid;
-        
         private readonly IFlock _flock;
-        private readonly ILogger<MainGame> _logger;
+        private readonly PartitionGrid _partitionGrid;
+        private readonly InputListenerService _inputService;
         private readonly IOptionsMonitor<BoidsOptions> _optionsMonitor;
-        private readonly IInputListenerService _inputListener;
-        // ReSharper disable once NotAccessedField.Local
-        private readonly CancellationToken _cancellationToken;
+        private readonly ILogger<MainGame> _logger;
+        private readonly IServiceProvider _serviceProvider;
         
         public static ViewportAdapter ViewportAdapter { get; private set; }
         public static BoidsOptions Options { get; set; }
         public static FastRandom Random { get; private set; } = new FastRandom();
         
-        public MainGame(IFlock flock, 
-                        PartitionGrid partitionGrid, 
-                        IInputListenerService inputListener,
-                        IOptionsMonitor<BoidsOptions> optionsMonitor, 
-                        ILogger<MainGame> logger,
-                        CancellationToken cancellationToken)
+        public MainGame(IFlock flock,
+                        InputListenerService inputService,
+                        PartitionGrid partitionGrid,
+                        IOptionsMonitor<BoidsOptions> optionsMonitor,
+                        ILogger<MainGame> logger)
         {
             _flock = flock;
-            _partitionGrid = partitionGrid;
-            _inputListener = inputListener;
+            _inputService = inputService;
             _optionsMonitor = optionsMonitor;
+            _partitionGrid = partitionGrid;
             _logger = logger;
-            _cancellationToken = cancellationToken;
             
+            _optionsMonitor.OnChange(OptionsMonitor_OnChanged);
             Options = _optionsMonitor.CurrentValue;
-            _optionsMonitor.OnChange(options =>
-            {
-                Options = options;
-                
-                InitializeViewport();
-                _partitionGrid.Initialize();
-                _flock.ResetFlock();
-            });
             
             IsMouseVisible = true;
             Content.RootDirectory = "Content";
-            
+
             Graphics = new GraphicsDeviceManager(this);
-            var virtualWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
-            var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
-            Graphics.PreferredBackBufferWidth = virtualWidth;
-            Graphics.PreferredBackBufferHeight = virtualHeight;
-            Graphics.ApplyChanges();
-            
             InitializeViewport();
+        }
+
+        private void OptionsMonitor_OnChanged(BoidsOptions options)
+        {
+            Options = options;
+
+            InitializeViewport();
+            
+            _flock.ResetFlock();
         }
 
         protected override void Initialize()
         {
             base.Initialize();
-
-            InitializeViewport();
+            _inputService.Initialize(this);
             
-            _inputListener.Initialize(this);
-            RegisterInputHandlers();
+            InitializeViewport();
+
             _partitionGrid.Initialize();
             _flock.ResetFlock();
-
-            _flock.Paused = false;
         }
 
         private void InitializeViewport()
         {
+            if (Graphics == null)
+                return;
+            
             var virtualWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
             var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
-            
             Graphics.PreferredBackBufferWidth = virtualWidth;
             Graphics.PreferredBackBufferHeight = virtualHeight;
             Graphics.ApplyChanges();
 
-            ViewportAdapter = new BoxingViewportAdapter(window: Window,
-                graphicsDevice: Graphics.GraphicsDevice,
-                virtualWidth: virtualWidth,
-                virtualHeight: virtualHeight);
+            ViewportAdapter = new BoxingViewportAdapter(window: Window, 
+                                                        graphicsDevice: Graphics.GraphicsDevice, 
+                                                        virtualWidth: virtualWidth, 
+                                                        virtualHeight: virtualHeight);
 
             ViewportAdapter.Reset();
             
@@ -121,39 +107,34 @@ namespace Boids.Core
                 _logger.LogInformation("VSync: {VSync}", Graphics.SynchronizeWithVerticalRetrace);
             }
         }
-
-        private void RegisterInputHandlers()
-        {
-            _inputListener.KeyboardListener.KeyPressed += InputListener_OnKeyPressed;
-        }
         
-        private void InputListener_OnKeyPressed(object sender, KeyboardEventArgs e)
+        private void InputService_OnKeyPressed(object sender, KeyboardEventArgs args)
         {
-            if (e.Key == Keys.Escape || e.Key == Keys.Q)
+            if (args.Key == Keys.Escape || args.Key == Keys.Q)
             {
                 LogInputCommand("Exit game");
                 Exit();
             }
 
-            if (e.Key == Keys.P)
+            if (args.Key == Keys.P)
             {
                 LogInputCommand("Toggle pause game");
                 _flock.Paused = !_flock.Paused;
             }
 
-            if (e.Key == Keys.R)
+            if (args.Key == Keys.R)
             {
                 LogInputCommand("Reset flock");
                 _flock?.ResetFlock();
             }
 
-            if (e.Key == Keys.F1)
+            if (args.Key == Keys.F1)
             {
                 LogInputCommand("Toggle displaying debug data");
                 Options.DisplayDebugData = !Options.DisplayDebugData;
             }
 
-            if (e.Key == Keys.OemComma && e.Modifiers.HasFlag(KeyboardModifiers.Control))
+            if (args.Key == Keys.OemComma && args.Modifiers.HasFlag(KeyboardModifiers.Control))
             {
                 LogInputCommand("Open appsettings.json");
                 var appSettingsFile = GetAppSettingsFile();
@@ -250,14 +231,14 @@ namespace Boids.Core
         protected override void Update(GameTime gameTime)
         {            
             _flock.Update(gameTime);
-            // _partitionGrid.UpdateActiveCells(_flock.Boids);
+            _partitionGrid.UpdateActiveCells(_flock.Boids);
             
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(MainGame.Options.Theme.BackgroundColor.Value);
+            GraphicsDevice.Clear(Options.Theme.BackgroundColor.Value);
 
             _partitionGrid.Draw(gameTime);
 

@@ -19,6 +19,7 @@ namespace Boids.Core.Entities
 
         private Vector2 _position;
         public Vector2 Position { get => _position; set => _position = value; }
+        public ref Vector2 PositionRef => ref _position;
 
         private float _rotation;
         public float Rotation { get => _rotation; set => _rotation = value; }

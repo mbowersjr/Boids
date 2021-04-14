@@ -1,34 +1,25 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Hosting;
-using Boids.Core.Configuration;
 
 namespace Boids.Core.Services
 {
     public class MainGameHostedService : IHostedService
     {
-        private readonly ILogger<MainGameHostedService> _logger;
-        private readonly IServiceProvider _services;
         private readonly IHostApplicationLifetime _appLifetime;
-        private readonly IOptionsMonitor<BoidsOptions> _options;
-        private readonly IConfiguration _configuration;
+        private readonly IServiceProvider _services;
+        private readonly ILogger<MainGameHostedService> _logger;
+        private MainGame _game;
 
-        public MainGameHostedService(
-            IHostApplicationLifetime appLifetime,
-            IServiceProvider services,
-            IOptionsMonitor<BoidsOptions> options,
-            IConfiguration configuration,
-            ILogger<MainGameHostedService> logger)
+        public MainGameHostedService(IHostApplicationLifetime appLifetime,
+                                     IServiceProvider services,
+                                     ILogger<MainGameHostedService> logger)
         {
             _appLifetime = appLifetime;
             _services = services;
-            _options = options;
-            _configuration = configuration;
             _logger = logger;
         }
 
@@ -36,20 +27,32 @@ namespace Boids.Core.Services
         {
             _appLifetime.ApplicationStarted.Register(() =>
             {
-                using (var game = ActivatorUtilities.CreateInstance<MainGame>(_services, cancellationToken))
-                {
-                    game.Run();
-                }
+                _logger.LogTrace("Application lifetime started");
+                
+                _logger.LogTrace("Getting MainGame instance ...");
+                _game = _services.GetRequiredService<MainGame>();
+
+                _logger.LogTrace("Beginning game loop ...");
+                
+                _game.Run();
+                
+                _logger.LogTrace("Game loop stopped");
                 
                 _appLifetime.StopApplication();
             });
-            
-            
+
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _logger.LogDebug("Application lifetime stopping ...");
+            
+            _logger.LogTrace("Exiting game ...");
+            _game.Exit();
+            
+            _logger.LogTrace("Application lifetime stopped");
+
             return Task.CompletedTask;
         }
     }

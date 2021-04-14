@@ -22,9 +22,9 @@ namespace Boids.Core.Services
         public int CellWidth { get; private set; }
         public int CellHeight { get; private set; }
         
-        private PartitionGridRenderer _gridRenderer;
+        private readonly PartitionGridRenderer _gridRenderer;
         private readonly ILogger<PartitionGrid> _logger;
-        
+
         public PartitionGrid(PartitionGridRenderer gridRenderer, ILogger<PartitionGrid> logger)
         {
             _gridRenderer = gridRenderer;
@@ -47,29 +47,48 @@ namespace Boids.Core.Services
             _gridRenderer.Initialize(this);
         }
 
-        // public void UpdateActiveCells(IEnumerable<Boid> boids)
-        // {
-        //     _gridRenderer.ClearActiveCells();
-        //     
-        //     foreach (var boid in boids)
-        //     {
-        //         if (!boid.IsActive)
-        //             continue;
-        //         
-        //         ref var cell = ref _gridRenderer.GetCellRef(boid.CellPosition);
-        //         
-        //         cell.IsActive = true;
-        //     }
-        // }
-        
+        public void UpdateActiveCells(IEnumerable<Boid> boids)
+        {
+            _gridRenderer.ClearActiveCells();
+
+            var cell = new PartitionGridRenderer.GridCell();
+            
+            foreach (var boid in boids)
+            {
+                if (!boid.IsActive)
+                    continue;
+
+                GetCellPosition(ref boid.PositionRef, ref cell);
+                cell.IsActive = true;
+            }
+        }
+
         public void Draw(GameTime gameTime)
         {
             _gridRenderer.Draw(gameTime);
         }
+
+        //public Point GetCellPosition(ref Vector2 position)
+        //{
+        //    GetCellPosition(ref position, out var point);
+        //    return point;
+        //}
         
-        public Point GetCellPosition(Vector2 position)
+        //public void GetCellPosition(ref Vector2 position, out Point point)
+        //{
+        //    point.X = (int) (position.X / CellWidth);
+        //    point.Y = (int) (position.Y / CellHeight);
+        //}
+        
+        public void GetCellPosition(ref Vector2 position, ref Vector2 cell)
         {
-            return new Point((int)(position.X / MainGame.Grid.CellWidth), (int)(position.Y / MainGame.Grid.CellHeight));
+            cell.X = (int) (position.X / CellWidth);
+            cell.Y = (int) (position.Y / CellHeight);
+        }
+        
+        public void GetCellPosition(ref Vector2 position, ref PartitionGridRenderer.GridCell cell)
+        {
+            GetCellPosition(ref position, ref cell.Position);
         }
     }
 }
