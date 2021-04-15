@@ -14,6 +14,7 @@ using MonoGame.Extended.ViewportAdapters;
 using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
+using Boids.Core.Gui.Windows;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
@@ -24,6 +25,9 @@ namespace Boids.Core
     {
         private SpriteFont _spriteFont;
         private SpriteBatch _spriteBatch;
+        
+        private DebugConsoleWindow _consoleWindow;
+        
         public static GraphicsDeviceManager Graphics { get; private set; }
         
         private readonly IFlock _flock;
@@ -68,17 +72,28 @@ namespace Boids.Core
             _flock.ResetFlock();
         }
 
+        public void Reset()
+        {
+            this.Initialize();
+        }
+        
         protected override void Initialize()
         {
             base.Initialize();
             _inputService.Initialize(this);
+            _inputService.GuiKeyboardListener.KeyPressed += InputService_OnKeyPressed;
             
             InitializeViewport();
 
+            _consoleWindow = new DebugConsoleWindow(this);
+            Components.Add(_consoleWindow);
+            
             _partitionGrid.Initialize();
             _flock.ResetFlock();
+            
         }
 
+        
         private void InitializeViewport()
         {
             if (Graphics == null)
@@ -132,6 +147,7 @@ namespace Boids.Core
             {
                 LogInputCommand("Toggle displaying debug data");
                 Options.DisplayDebugData = !Options.DisplayDebugData;
+                _consoleWindow.IsVisible = true;
             }
 
             if (args.Key == Keys.OemComma && args.Modifiers.HasFlag(KeyboardModifiers.Control))
@@ -241,7 +257,7 @@ namespace Boids.Core
             GraphicsDevice.Clear(Options.Theme.BackgroundColor.Value);
 
             _partitionGrid.Draw(gameTime);
-
+            
             _flock.Draw(gameTime, _spriteBatch, _spriteFont);
         }
     }

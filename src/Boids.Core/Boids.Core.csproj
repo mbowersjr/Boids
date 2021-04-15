@@ -40,8 +40,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\lib\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Gui\" />
   </ItemGroup>  
 </Project>
