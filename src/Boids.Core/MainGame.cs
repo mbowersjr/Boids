@@ -26,8 +26,6 @@ namespace Boids.Core
         private SpriteFont _spriteFont;
         private SpriteBatch _spriteBatch;
         
-        private DebugConsoleWindow _consoleWindow;
-        
         public static GraphicsDeviceManager Graphics { get; private set; }
         
         private readonly IFlock _flock;
@@ -36,7 +34,9 @@ namespace Boids.Core
         private readonly IOptionsMonitor<BoidsOptions> _optionsMonitor;
         private readonly ILogger<MainGame> _logger;
         private readonly IServiceProvider _serviceProvider;
-        
+
+        private readonly IDebugConsoleWindow _consoleWindow;
+
         public static ViewportAdapter ViewportAdapter { get; private set; }
         public static BoidsOptions Options { get; set; }
         public static FastRandom Random { get; private set; } = new FastRandom();
@@ -61,6 +61,8 @@ namespace Boids.Core
 
             Graphics = new GraphicsDeviceManager(this);
             InitializeViewport();
+            
+            _consoleWindow = new DebugConsoleWindow(this);
         }
 
         private void OptionsMonitor_OnChanged(BoidsOptions options)
@@ -84,9 +86,8 @@ namespace Boids.Core
             _inputService.GuiKeyboardListener.KeyPressed += InputService_OnKeyPressed;
             
             InitializeViewport();
-
-            _consoleWindow = new DebugConsoleWindow(this);
-            Components.Add(_consoleWindow);
+            
+            _consoleWindow.Initialize();
             
             _partitionGrid.Initialize();
             _flock.ResetFlock();
@@ -122,9 +123,23 @@ namespace Boids.Core
                 _logger.LogInformation("VSync: {VSync}", Graphics.SynchronizeWithVerticalRetrace);
             }
         }
+
+        public bool IsPaused => _flock.Paused;
+        public void TogglePaused()
+        {
+            if (_flock != null)
+            {
+                _flock.Paused = !_flock.Paused;
+            }
+        }
         
         private void InputService_OnKeyPressed(object sender, KeyboardEventArgs args)
         {
+            if (_consoleWindow.ConsoleState.IsInputFocused)
+            {
+                return;
+            }
+            
             if (args.Key == Keys.Escape || args.Key == Keys.Q)
             {
                 LogInputCommand("Exit game");
@@ -147,7 +162,7 @@ namespace Boids.Core
             {
                 LogInputCommand("Toggle displaying debug data");
                 Options.DisplayDebugData = !Options.DisplayDebugData;
-                _consoleWindow.IsVisible = true;
+                _consoleWindow.IsVisible = Options.DisplayDebugData;
             }
 
             if (args.Key == Keys.OemComma && args.Modifiers.HasFlag(KeyboardModifiers.Control))
@@ -236,18 +251,24 @@ namespace Boids.Core
             
             _spriteFont = Content.Load<SpriteFont>("Fonts/FixedWidth");
             Boid.BoidSprite = Content.Load<Texture2D>("Images/Boid_32x32");
+            
+            _consoleWindow.LoadContent();
         }
 
         protected override void UnloadContent()
         {
             _spriteBatch.Dispose();
             Boid.BoidSprite.Dispose();
+
+            _consoleWindow.UnloadContent();
         }
 
         protected override void Update(GameTime gameTime)
         {            
             _flock.Update(gameTime);
             _partitionGrid.UpdateActiveCells(_flock.Boids);
+            
+            _consoleWindow.Update(gameTime);
             
             base.Update(gameTime);
         }
@@ -259,6 +280,8 @@ namespace Boids.Core
             _partitionGrid.Draw(gameTime);
             
             _flock.Draw(gameTime, _spriteBatch, _spriteFont);
+
+            _consoleWindow.Draw(gameTime);
         }
     }
 }

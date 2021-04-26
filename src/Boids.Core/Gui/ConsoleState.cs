@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Num = System.Numerics;
 using Boids.Core.Gui.Windows;
 
 namespace Boids.Core.Gui
@@ -15,9 +16,16 @@ namespace Boids.Core.Gui
         public const uint InputBufferSize = 1024;
         public Queue<ConsoleLogEntry> LogEntries { get; set; }
         public Queue<ConsoleLogEntry> CommandHistory { get; set; }
+        public bool IsInputFocused { get; set; }
         public int HistoryPosition { get; set; }
         public bool AutoScroll { get; set; }
         public bool ScrollToButtom { get; set; }
+        
+        private bool _consoleWindowVisible = false;
+        public ref bool ConsoleWindowVisible => ref _consoleWindowVisible;
+
+        private readonly DebugConsoleWindow _debugConsoleWindow;
+        
         public MainGame Game { get; set; }
 
         private readonly Dictionary<string, Func<ConsoleState, ConsoleCommandResult>> _validCommands;
@@ -40,11 +48,6 @@ namespace Boids.Core.Gui
             AddValidCommand("EXIT", DebugConsoleWindowCommands.Exit);
             AddValidCommand("HELP", DebugConsoleWindowCommands.Help);
             AddValidCommand("RESET", DebugConsoleWindowCommands.Reset);
-        }
-
-        private void SetResult(string text, bool wasError)
-        {
-            CurrentResult = ConsoleCommandResult.Create(text, wasError);
         }
         
         public void SetCurrentCommand(string command, params string[] args)
@@ -76,11 +79,11 @@ namespace Boids.Core.Gui
             CurrentResult = result;
         }
         
-        public ConsoleState(MainGame game)
+        public ConsoleState(DebugConsoleWindow debugConsoleWindow)
         {
             _validCommands = new Dictionary<string, Func<ConsoleState, ConsoleCommandResult>>();
-            
-            Game = game;
+            _debugConsoleWindow = debugConsoleWindow;
+            Game = _debugConsoleWindow.Game;
             InputBuffer = new byte[InputBufferSize];
             InputText = null;
             LogEntries = new Queue<ConsoleLogEntry>();
@@ -90,12 +93,43 @@ namespace Boids.Core.Gui
             ScrollToButtom = true;
         }
 
+        public void ShowWindow() => _consoleWindowVisible = true;
+        public void CloseWindow() => _consoleWindowVisible = false;
+
         public void ClearHistory()
         {
             LogEntries.Clear();
             CommandHistory.Clear();
             
             HistoryPosition = -1;
+        }
+        
+        
+        private static readonly Num.Vector4 DefaultLogEntryColor = new Num.Vector4(0.04f, 0.04f, 0.04f, 1.0f);
+        
+        public static bool GetLogEntryLevelColor(ConsoleLogEntryLevel level, out Num.Vector4 color)
+        {
+            if (level == ConsoleLogEntryLevel.Error || level == ConsoleLogEntryLevel.Critical)
+            {
+                color = new Num.Vector4(1.0f, 0.4f, 0.4f, 1.0f);
+                return true;
+            }
+            
+            if (level == ConsoleLogEntryLevel.Warning)
+            {
+                color = new Num.Vector4(1.0f, 0.8f, 0.2f, 1.0f);
+                return true;
+
+            }
+            
+            if (level == ConsoleLogEntryLevel.Debug || level == ConsoleLogEntryLevel.Trace)
+            {
+                color = new Num.Vector4(0.2f, 0.2f, 0.2f, 1.0f);
+                return true;
+            }
+            
+            color = DefaultLogEntryColor;
+            return false;
         }
     }
 }

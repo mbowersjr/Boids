@@ -28,5 +28,12 @@
             var output = "-------------------------\nBoids Flocking Simulation\n-------------------------";
             return ConsoleCommandResult.Create(output);
         }
+        public static ConsoleCommandResult Pause(ConsoleState state)
+        {
+            state.Game.TogglePaused();
+            
+            var output = state.Game.IsPaused ? "Game paused" : "Game unpaused";
+            return ConsoleCommandResult.Create(output);
+        }
     }
 }

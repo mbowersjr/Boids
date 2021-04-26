@@ -1,85 +1,114 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using Boids.Core.Services;
 using Num = System.Numerics;
 using ImGuiNET;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.Input.InputListeners;
 
 namespace Boids.Core.Gui.Windows
 {
-    public class DebugConsoleWindow : Microsoft.Xna.Framework.DrawableGameComponent
+    public interface IDebugConsoleWindow
     {
-        private readonly ConsoleState _state;
+        void Initialize();
+        void Update(GameTime gameTime);
+        void Draw(GameTime gameTime);
+        void LoadContent();
+        void UnloadContent();
+        void ExecuteCommand(string inputText);
+        
+        bool IsVisible { get; set; }
+        ConsoleState ConsoleState { get; }
+        MainGame Game { get; }
+    }
+    
+    public class DebugConsoleWindow : IDebugConsoleWindow
+    {
         
         private IImGuiRenderer _imGuiRenderer;
-        private Texture2D _xnaTexture;
-        private IntPtr _imGuiTexture;
-        private GraphicsDeviceManager _graphics;
+        //private Texture2D _xnaTexture;
+        //private IntPtr _imGuiTexture;
+        private GraphicsDevice _graphics;
+        
+        private readonly string _windowTitle = "Debug Console";
 
+        private readonly MainGame _game;
+        public MainGame Game => _game;
+        
+        private readonly ConsoleState _state;
+        public ConsoleState ConsoleState => _state;
+        private InputListenerService _inputService;
+        
         public bool IsVisible
         {
-            get => _isConsoleWindowOpen;
-            set => _isConsoleWindowOpen = value;
+            get => _state.ConsoleWindowVisible;
+            set => _state.ConsoleWindowVisible = value;
         }
         
-        public DebugConsoleWindow(MainGame game) 
-            : base(game)
+        
+        public DebugConsoleWindow(MainGame game)
         {
-            _state = new ConsoleState(game);
+            _game = game;
+            _state = new ConsoleState(this);
         }
         
-        public override void Initialize()
+        public void Initialize()
         {
-            _imGuiRenderer = new ImGuiRenderer(this.Game);
+            _graphics = _game.GraphicsDevice;
+            
+            _imGuiRenderer = new ImGuiRenderer(_game);
             _imGuiRenderer.RebuildFontAtlas();
             
             _state.InitializeValidCommands();
 
-            base.Initialize();
+            var componentServiceLink = _game.Services.GetRequiredService<InputListenerComponentServiceLink>();
+            _inputService = componentServiceLink.Service;
+            _inputService.InitImGuiIO();
         }
 
-        public override void Update(GameTime gameTime)
+        public void Update(GameTime gameTime)
         {
         }
 
-        public override void Draw(GameTime gameTime)
+        public void Draw(GameTime gameTime)
         {
+            ImGui.GetIO().DeltaTime = (float) gameTime.ElapsedGameTime.TotalSeconds;
+            _inputService.UpdateImGuiIO();
+            
             _imGuiRenderer.BeforeLayout(gameTime);
             
             ImGuiLayout();
             
             _imGuiRenderer.AfterLayout();
-            
-            base.Draw(gameTime);
         }
 
-        protected override void LoadContent()
-        {
-            _xnaTexture = CreateTexture(GraphicsDevice, 300, 150, pixel =>
-            {
-                var red = (pixel % 300) / 2;
-                return new Color(red, 1, 1);
-            });
+        public void LoadContent()
+        { 
+            //_xnaTexture = CreateTexture(_graphics, 300, 150, pixel =>
+            //{
+            //    var red = (pixel % 300) / 2;
+            //    return new Color(red, 1, 1);
+            //});
 
-            _imGuiTexture = _imGuiRenderer.BindTexture(_xnaTexture);
-            
-            base.LoadContent();
+            //_imGuiTexture = _imGuiRenderer.BindTexture(_xnaTexture);
         }
         
-        protected override void UnloadContent()
+        public void UnloadContent()
         {
-            base.UnloadContent();
         }
         
-        private string _consoleWindowTitle = "Debug Console";
-        private bool _isConsoleWindowOpen = false;
-        
-        protected virtual void DrawConsoleWindow()
+        private unsafe void DrawConsoleWindow()
         {
-            ImGui.SetNextWindowSize(new Num.Vector2(520, 600), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSize(new Num.Vector2(400, 600), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowPos(new Num.Vector2(10, 10), ImGuiCond.FirstUseEver);
+
+            // ImGui.Begin(_windowTitle, ref _state.ConsoleWindowVisible);
             
-            if (!ImGui.Begin(_consoleWindowTitle, ref _isConsoleWindowOpen))
+            if (!ImGui.Begin(_windowTitle, ref _state.ConsoleWindowVisible))
             {
                 ImGui.End();
                 return;
@@ -90,8 +119,10 @@ namespace Boids.Core.Gui.Windows
             // Here we create a context menu only available from the title bar.
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.MenuItem("Close Console")) 
-                    _isConsoleWindowOpen = false;
+                if (ImGui.MenuItem("Close"))
+                {
+                    _state.CloseWindow();
+                }
 
                 ImGui.EndPopup();
             }
@@ -101,145 +132,164 @@ namespace Boids.Core.Gui.Windows
 
             if (ImGui.SmallButton("Clear"))
             {
-                ClearConsole();
+                _state.ExecuteCommand("CLEAR");
             }
+            ImGui.SameLine();
+            if (ImGui.SmallButton("Close"))
+            {
+                _state.CloseWindow();
+            }
+            
+            ImGui.Separator();
 
             var footerHeight = ImGui.GetStyle().ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing();
-            ImGui.BeginChild("ScrollingRegion", new System.Numerics.Vector2(0, -footerHeight), false, ImGuiWindowFlags.HorizontalScrollbar);
+            ImGui.BeginChild("ScrollingRegion", new Num.Vector2(0, -footerHeight), false, ImGuiWindowFlags.HorizontalScrollbar);
+            
             if (ImGui.BeginPopupContextWindow())
             {
                 if (ImGui.Selectable("Clear"))
                 {
                     _state.ExecuteCommand("CLEAR");
-                    ImGui.EndPopup();
                 }
+                ImGui.EndPopup();
             }
+
+
+            /*
+            Display every line as a separate entry so we can change their color or add custom widgets.
+            If you only want raw text you can use ImGui::TextUnformatted(log.begin(), log.end());
+        
+            If you have thousands of entries this approach may be too inefficient and may require user - side clipping 
+            to only process visible items. The clipper will automatically measure the height of your first item and then
+            "seek" to display only items in the visible area.
             
+            To use the clipper we can replace your standard loop:
+                for (int i = 0; i < Items.Size; i++)
+        
+            With:
+        
+                ImGuiListClipper clipper;
+                clipper.Begin(Items.Size);
+                while (clipper.Step())
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+                        - That your items are evenly spaced(same height)
+                        - That you have cheap random access to your elements(you can access them given their index,
+                          without processing all the ones before)
             
-            // Display every line as a separate entry so we can change their color or add custom widgets.
-            // If you only want raw text you can use ImGui::TextUnformatted(log.begin(), log.end());
-            // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
-            // to only process visible items. The clipper will automatically measure the height of your first item and then
-            // "seek" to display only items in the visible area.
-            // To use the clipper we can replace your standard loop:
-            //      for (int i = 0; i < Items.Size; i++)
-            //   With:
-            //      ImGuiListClipper clipper;
-            //      clipper.Begin(Items.Size);
-            //      while (clipper.Step())
-            //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-            // - That your items are evenly spaced (same height)
-            // - That you have cheap random access to your elements (you can access them given their index,
-            //   without processing all the ones before)
-            // You cannot this code as-is if a filter is active because it breaks the 'cheap random-access' property.
-            // We would need random-access on the post-filtered list.
-            // A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices
-            // or offsets of items that passed the filtering test, recomputing this array when user changes the filter,
-            // and appending newly elements as they are inserted. This is left as a task to the user until we can manage
-            // to improve this example code!
-            // If your items are of variable height:
-            // - Split them into same height items would be simpler and facilitate random-seeking into your list.
-            // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new System.Numerics.Vector2(4, 1));
+            You cannot use this code as-is if a filter is active because it breaks the 'cheap random-access' property.
+            We would need random-access on the post - filtered list.
+        
+            A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices
+            or offsets of items that passed the filtering test, recomputing this array when user changes the filter,
+            and appending newly elements as they are inserted. This is left as a task to the user until we can manage
+            to improve this example code!
+        
+            If your items are of variable height:
+            - Split them into same height items would be simpler and facilitate random - seeking into your list. 
+            - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
+            */
+            
+             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(4, 1));
             
             foreach (var entry in _state.LogEntries)
             {
                 Num.Vector4 color;
-                var hasColor = GetLogEntryLevelColor(entry.EntryLevel, out color);
+                var hasColor = ConsoleState.GetLogEntryLevelColor(entry.EntryLevel, out color);
 
-                if (hasColor) 
+                if (hasColor)
+                {
                     ImGui.PushStyleColor(ImGuiCol.Text, color);
+                }
                 
                 ImGui.TextUnformatted(entry.Text);
-                
+
                 if (hasColor)
-                    ImGui.PopStyleColor();
-                
-                if (_state.ScrollToButtom || (_state.AutoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY()))
-                    ImGui.SetScrollHereY(1.0f);
-                _state.ScrollToButtom = false;
-                
-                ImGui.PopStyleVar();
-                ImGui.EndChild();
-                ImGui.Separator();
-                
-                
-                // Command line
-                var reclaimFocus = false;
-                ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackCompletion | ImGuiInputTextFlags.CallbackHistory;
-                if (ImGui.InputText("Input", _state.InputBuffer, ConsoleState.InputBufferSize, inputTextFlags))
                 {
-                    var inputText = Encoding.UTF8.GetString(_state.InputBuffer);
-                    
-                    _state.InputText = inputText.Trim();
-                    if (!string.IsNullOrEmpty(_state.InputText))
-                    {
-                        ExecuteCommand(_state);
-                    }
-                    
-                    reclaimFocus = true;
+                    ImGui.PopStyleColor();
                 }
 
-                // Auto-focus on window apparition
-                ImGui.SetItemDefaultFocus();
+                if (_state.ScrollToButtom || (_state.AutoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY()))
+                {
+                    ImGui.SetScrollHereY(1.0f);
+                }
                 
-                if (reclaimFocus)
-                    ImGui.SetKeyboardFocusHere(-1); // Auto focus previous widget
-
-                ImGui.End();
+                _state.ScrollToButtom = false;
             }
+            
+            ImGui.PopStyleVar();
+            ImGui.EndChild();
+            ImGui.Separator();
+                
+            // Command line
+            var reclaimFocus = false;
+            ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackCompletion;
+            
+            ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
+            if (ImGui.InputText("##inputText", ref _inputBuffer, _inputBufferSize, inputTextFlags, InputTextEditCallback))
+            {
+                _state.InputText = _inputBuffer;
+                ExecuteCommand(_state.InputText);
+
+                _inputBuffer = string.Empty;
+                _state.InputText = string.Empty;
+
+                reclaimFocus = true;
+            }
+            
+            _state.IsInputFocused = ImGui.IsItemFocused();
+            
+            // Auto-focus on window apparition
+            ImGui.SetItemDefaultFocus();
+                
+            if (reclaimFocus)
+            {
+                // Auto focus previous widget
+                ImGui.SetKeyboardFocusHere(-1);
+            }
+            
+            ImGui.End();
         }
 
-        private void ExecuteCommand(ConsoleState state)
+        private string _inputBuffer = string.Empty;
+        private uint _inputBufferSize = 128;
+
+        public void ExecuteCommand(string inputText)
         {
-            var words = state.InputText.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            _state.InputText = inputText;
+            
+            var words = _state.InputText.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             
             var command = words.First();
             var args = words.Skip(1).ToArray();
             
             _state.ExecuteCommand(command, args);
+            
+            if (_state.CurrentResult.WasError)
+            {
+                _state.LogError(_state.CurrentResult.Text);
+            }
+            else
+            {
+                _state.LogInformation(_state.CurrentResult.Text);
+            }
         }
 
+        
         private unsafe int InputTextEditCallback(ImGuiInputTextCallbackData* data)
         {
-            throw new NotImplementedException();
+            if (data->EventKey == ImGuiKey.Enter)
+                return (int)ImGuiKey.Enter;
+            
+            var currentEventChar = (char)data->EventChar;
+            return currentEventChar;
         }
 
-        private static readonly Num.Vector4 DefaultLogEntryColor = new Num.Vector4(0.04f, 0.04f, 0.04f, 1.0f);
-        private static bool GetLogEntryLevelColor(ConsoleLogEntryLevel level, out Num.Vector4 color)
+        private void ImGuiLayout()
         {
-            if (level == ConsoleLogEntryLevel.Error || level == ConsoleLogEntryLevel.Critical)
+            if (_state.ConsoleWindowVisible)
             {
-                color = new Num.Vector4(1.0f, 0.4f, 0.4f, 1.0f);
-                return true;
+                DrawConsoleWindow();
             }
-            
-            if (level == ConsoleLogEntryLevel.Warning)
-            {
-                color = new Num.Vector4(1.0f, 0.8f, 0.2f, 1.0f);
-                return true;
-
-            }
-            
-            if (level == ConsoleLogEntryLevel.Debug || level == ConsoleLogEntryLevel.Trace)
-            {
-                color = new Num.Vector4(0.2f, 0.2f, 0.2f, 1.0f);
-                return true;
-            }
-            
-            color = DefaultLogEntryColor;
-            return false;
-        }
-
-        private void ClearConsole()
-        {
-
-        }
-        
-        protected virtual void ImGuiLayout()
-        {
-
-            DrawConsoleWindow();
 
             //// 1. Show a simple window
             //// Tip: if we don't call ImGui.Begin()/ImGui.End() the widgets appears in a window automatically called "Debug"
@@ -274,23 +324,5 @@ namespace Boids.Core.Gui.Windows
             //}
         }
         
-        public static Texture2D CreateTexture(GraphicsDevice device, int width, int height, Func<int, Color> paint)
-        {
-            //initialize a texture
-            var texture = new Texture2D(device, width, height);
-
-            //the array holds the color for each pixel in the texture
-            Color[] data = new Color[width * height];
-            for(var pixel = 0; pixel < data.Length; pixel++)
-            {
-                //the function applies the color according to the specified pixel
-                data[pixel] = paint( pixel );
-            }
-
-            //set the color
-            texture.SetData( data );
-
-            return texture;
-        }
     }
 }

@@ -2,9 +2,12 @@
 using Boids.Core.Behaviors;
 using Boids.Core.Configuration;
 using Boids.Core.Entities;
+using Boids.Core.Gui;
+using Boids.Core.Gui.Windows;
 using Boids.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MonoGame.Extended.Input.InputListeners;
 
 namespace Boids.Core.Startup
@@ -23,6 +26,9 @@ namespace Boids.Core.Startup
             services.AddTransient<PartitionGrid>();
             services.AddTransient<PartitionGridRenderer>();
             
+            //services.AddTransient<ConsoleWindowLoggerOptions, ConsoleWindowLoggerOptions>();
+            services.AddSingleton<IDebugConsoleWindow, DebugConsoleWindow>();
+
             services.AddSingleton<MainGame>();
             
             services.AddHostedService<MainGameHostedService>();
