@@ -7,17 +7,20 @@ namespace Boids.Core.Gui
 {
     public class ConsoleCommandResult
     {
-        public string Text { get; set; }
+        public string InputText { get; set; }
+        public string OutputText { get; set; }
         public bool WasError { get; set; }
 
-        public ConsoleCommandResult(string text, bool wasError)
+        public ConsoleCommandResult(string inputText, string outputText, bool wasError)
         {
-            Text = text;
+            InputText = inputText;
+            OutputText = outputText;
             WasError = wasError;
         }
 
-        public static ConsoleCommandResult Create(string text, bool wasError = false) => new ConsoleCommandResult(text, wasError);
+        public static ConsoleCommandResult Create(string inputText, string outputText, bool wasError = false) => 
+            new ConsoleCommandResult(inputText, outputText, wasError);
 
-        public static readonly ConsoleCommandResult EmptyResult = new ConsoleCommandResult(null, false);
+        public static readonly ConsoleCommandResult EmptyResult = new ConsoleCommandResult(null, null, false);
     }
 }

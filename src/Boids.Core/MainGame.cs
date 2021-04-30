@@ -33,7 +33,7 @@ namespace Boids.Core
         private readonly InputListenerService _inputService;
         private readonly IOptionsMonitor<BoidsOptions> _optionsMonitor;
         private readonly ILogger<MainGame> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        // private readonly IServiceProvider _serviceProvider;
 
         private readonly IDebugConsoleWindow _consoleWindow;
 
@@ -68,7 +68,6 @@ namespace Boids.Core
         private void OptionsMonitor_OnChanged(BoidsOptions options)
         {
             Options = options;
-
             InitializeViewport();
             
             _flock.ResetFlock();
@@ -76,7 +75,7 @@ namespace Boids.Core
 
         public void Reset()
         {
-            this.Initialize();
+            _flock?.ResetFlock();
         }
         
         protected override void Initialize()

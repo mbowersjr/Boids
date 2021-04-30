@@ -15,7 +15,7 @@ namespace Boids.Core.Gui
         
         public const uint InputBufferSize = 1024;
         public Queue<ConsoleLogEntry> LogEntries { get; set; }
-        public Queue<ConsoleLogEntry> CommandHistory { get; set; }
+        public List<ConsoleCommandResult> CommandHistory { get; set; }
         public bool IsInputFocused { get; set; }
         public int HistoryPosition { get; set; }
         public bool AutoScroll { get; set; }
@@ -68,7 +68,8 @@ namespace Boids.Core.Gui
             
             if (!_validCommands.ContainsKey(CurrentCommand))
             {
-                result = ConsoleCommandResult.Create($"Invalid command: '{CurrentCommand}'", true);
+                var outputText = $"Invalid command: '{CurrentCommand}'";
+                result = ConsoleCommandResult.Create(InputText, outputText, true);
             }
             else
             {
@@ -77,17 +78,18 @@ namespace Boids.Core.Gui
             }
             
             CurrentResult = result;
+            CommandHistory.Add(CurrentResult);
         }
         
         public ConsoleState(DebugConsoleWindow debugConsoleWindow)
         {
-            _validCommands = new Dictionary<string, Func<ConsoleState, ConsoleCommandResult>>();
+            _validCommands = new Dictionary<string, Func<ConsoleState, ConsoleCommandResult>>(StringComparer.OrdinalIgnoreCase);
             _debugConsoleWindow = debugConsoleWindow;
             Game = _debugConsoleWindow.Game;
             InputBuffer = new byte[InputBufferSize];
             InputText = null;
             LogEntries = new Queue<ConsoleLogEntry>();
-            CommandHistory = new Queue<ConsoleLogEntry>();
+            CommandHistory = new List<ConsoleCommandResult>();
             HistoryPosition = -1;
             AutoScroll = true;
             ScrollToButtom = true;
@@ -96,11 +98,29 @@ namespace Boids.Core.Gui
         public void ShowWindow() => _consoleWindowVisible = true;
         public void CloseWindow() => _consoleWindowVisible = false;
 
+        public ConsoleCommandResult GetPreviousCommand()
+        {
+            if (CommandHistory.Count == 0) 
+                return null;
+
+            if (HistoryPosition > 0)
+            {
+                HistoryPosition--;
+            }
+            else
+            {
+                HistoryPosition = CommandHistory.Count - 1;
+            }
+
+            var previousCommand = CommandHistory[HistoryPosition];
+            return previousCommand;
+        }
+        
         public void ClearHistory()
         {
             LogEntries.Clear();
-            CommandHistory.Clear();
             
+            CommandHistory.Clear();
             HistoryPosition = -1;
         }
         
