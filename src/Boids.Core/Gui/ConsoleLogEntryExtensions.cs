@@ -13,6 +13,8 @@ namespace Boids.Core.Gui
         
         public static void LogEntry(this ConsoleState state, string text, ConsoleLogEntryLevel entryLevel, params object[] args)
         {
+            if (string.IsNullOrEmpty(text)) return;
+            
             var entry = new ConsoleLogEntry(string.Format(text, args), entryLevel, DateTime.Now);
             state.LogEntries.Enqueue(entry);
         }

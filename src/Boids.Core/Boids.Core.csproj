@@ -10,7 +10,8 @@
     <IsPackable>false</IsPackable>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-  </PropertyGroup>
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>  
   <ItemGroup>
     <Compile Remove="Content\bin\**" />
     <Compile Remove="Content\obj\**" />
@@ -18,15 +19,15 @@
     <EmbeddedResource Remove="Content\obj\**" />
     <None Remove="Content\bin\**" />
     <None Remove="Content\obj\**" />
-  </ItemGroup>  
+  </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="**\*.mgcb" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+    </None>    
+  </ItemGroup>  
   <ItemGroup>
     <TrimmerRootAssembly Include="Microsoft.Xna.Framework.Content.ContentTypeReader" Visible="false" />
   </ItemGroup>
@@ -40,5 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\lib\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />
-  </ItemGroup>  
+  </ItemGroup>
+  
+  <Import Project="Build\Boids.Core.targets" />
 </Project>

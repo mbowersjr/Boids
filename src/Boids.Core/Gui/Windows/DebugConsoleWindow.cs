@@ -222,10 +222,11 @@ namespace Boids.Core.Gui.Windows
                 
             // Command line
             var reclaimFocus = false;
-            ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackCompletion;
             
             ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X);
-            if (ImGui.InputText("##inputText", ref _inputBuffer, _inputBufferSize, inputTextFlags, InputTextEditCallback))
+
+            ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CallbackHistory | ImGuiInputTextFlags.CallbackCompletion;
+            if (ImGui.InputText("##inputText", ref _inputBuffer, _inputBufferSize, inputTextFlags, ImGuiInputTextFlags_Callback))
             {
                 _state.InputText = _inputBuffer;
                 ExecuteCommand(_state.InputText);
@@ -263,25 +264,65 @@ namespace Boids.Core.Gui.Windows
             var args = words.Skip(1).ToArray();
             
             _state.ExecuteCommand(command, args);
+            _state.CurrentResult.InputText = _state.InputText;
             
             if (_state.CurrentResult.WasError)
             {
-                _state.LogError(_state.CurrentResult.Text);
+                _state.LogError(_state.CurrentResult.OutputText);
             }
             else
             {
-                _state.LogInformation(_state.CurrentResult.Text);
+                _state.LogInformation(_state.CurrentResult.OutputText);
             }
         }
 
-        
-        private unsafe int InputTextEditCallback(ImGuiInputTextCallbackData* data)
+        private unsafe int ImGuiInputTextFlags_Callback(ImGuiInputTextCallbackData* data)
         {
-            if (data->EventKey == ImGuiKey.Enter)
-                return (int)ImGuiKey.Enter;
+            var dataPtr = new ImGuiInputTextCallbackDataPtr(data);
             
-            var currentEventChar = (char)data->EventChar;
-            return currentEventChar;
+            switch (dataPtr.EventFlag)
+            {
+                case ImGuiInputTextFlags.CallbackCompletion:
+                    return ImGuiInputTextFlags_CallbackCompletion(dataPtr);
+                    
+                case ImGuiInputTextFlags.CallbackHistory:
+                    return ImGuiInputTextFlags_CallbackHistory(dataPtr);
+                
+                case ImGuiInputTextFlags.EnterReturnsTrue:
+                    return ImGuiInputTextFlags_EnterReturnsTrue(dataPtr);
+                
+                default:
+                    return 0;
+            }
+        }
+        private unsafe int ImGuiInputTextFlags_CallbackCompletion(ImGuiInputTextCallbackDataPtr dataPtr)
+        {
+            if (dataPtr.EventKey == ImGuiKey.Enter)
+            {
+            }
+            
+            return 0;
+        }
+        private unsafe int ImGuiInputTextFlags_CallbackHistory(ImGuiInputTextCallbackDataPtr dataPtr)
+        {
+            if (dataPtr.EventKey == ImGuiKey.UpArrow)
+            {
+                var previousCommand = _state.GetPreviousCommand();
+            
+                if (previousCommand != null)
+                {
+                    dataPtr.DeleteChars(0, dataPtr.BufTextLen);
+                    dataPtr.InsertChars(0, previousCommand.InputText);
+                    dataPtr.SelectAll();
+                }
+            }
+            
+            return 0;
+        }
+        private unsafe int ImGuiInputTextFlags_EnterReturnsTrue(ImGuiInputTextCallbackDataPtr dataPtr)
+        {
+            var currentEventChar = (char)dataPtr.EventChar;
+            return 0;
         }
 
         private void ImGuiLayout()
