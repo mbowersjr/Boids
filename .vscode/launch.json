@@ -9,9 +9,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Boids.Core/bin/Debug/net5.0/Boids.Core.dll",
+            "program": "${workspaceFolder}/src/Boids.Core/bin/Debug/net5.0/Boids.Core.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Boids.Core",
+            "cwd": "${workspaceFolder}/src/Boids.Core",
             "console": "internalConsole",
             "stopAtEntry": false
         },
