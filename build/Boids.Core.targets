@@ -1,7 +1,4 @@
-
-<Project>
-  <!--  
-  
+<Project> 
   <PropertyGroup>
     <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And ('$(Prefer32Bit)' == 'true' Or '$(PlatformTarget)' == 'x86')">x86</_NativeRuntime>
     <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And ('$(Prefer32Bit)' == 'false' Or '$(PlatformTarget)' == 'x64')">x64</_NativeRuntime>
@@ -15,5 +12,4 @@
       <Visible>False</Visible>
     </Content>
   </ItemGroup>
-  -->  
 </Project>
