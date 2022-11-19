@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <AssemblyName>Boids.Core</AssemblyName>
     <RootNamespace>Boids.Core</RootNamespace>
     <TieredCompilation>false</TieredCompilation>
@@ -11,6 +11,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <NoWarn>1701;1702;CS1591</NoWarn>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>  
   <ItemGroup>
     <Compile Remove="Content\bin\**" />
@@ -43,5 +44,5 @@
     <ProjectReference Include="..\..\lib\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />
   </ItemGroup>
   
-  <Import Project="Build\Boids.Core.targets" />
+  <Import Project="..\..\build\Boids.Core.targets" />
 </Project>
