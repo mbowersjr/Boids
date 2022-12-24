@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Num = System.Numerics;
 using Boids.Core.Gui.Windows;
 
 namespace Boids.Core.Gui
@@ -125,26 +124,25 @@ namespace Boids.Core.Gui
         }
         
         
-        private static readonly Num.Vector4 DefaultLogEntryColor = new Num.Vector4(0.04f, 0.04f, 0.04f, 1.0f);
+        private static readonly System.Numerics.Vector4 DefaultLogEntryColor = new System.Numerics.Vector4(0.04f, 0.04f, 0.04f, 1.0f);
         
-        public static bool GetLogEntryLevelColor(ConsoleLogEntryLevel level, out Num.Vector4 color)
+        public static bool GetLogEntryLevelColor(ConsoleLogEntryLevel level, out System.Numerics.Vector4 color)
         {
             if (level == ConsoleLogEntryLevel.Error || level == ConsoleLogEntryLevel.Critical)
             {
-                color = new Num.Vector4(1.0f, 0.4f, 0.4f, 1.0f);
+                color = new System.Numerics.Vector4(1.0f, 0.4f, 0.4f, 1.0f);
                 return true;
             }
             
             if (level == ConsoleLogEntryLevel.Warning)
             {
-                color = new Num.Vector4(1.0f, 0.8f, 0.2f, 1.0f);
+                color = new System.Numerics.Vector4(1.0f, 0.8f, 0.2f, 1.0f);
                 return true;
-
             }
             
             if (level == ConsoleLogEntryLevel.Debug || level == ConsoleLogEntryLevel.Trace)
             {
-                color = new Num.Vector4(0.2f, 0.2f, 0.2f, 1.0f);
+                color = new System.Numerics.Vector4(0.2f, 0.2f, 0.2f, 1.0f);
                 return true;
             }
             

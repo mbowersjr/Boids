@@ -17,8 +17,6 @@ using Boids.Core.Configuration;
 using Boids.Core.Gui.Windows;
 using Microsoft.Extensions.DependencyInjection;
 
-// ReSharper disable PrivateFieldCanBeConvertedToLocalVariable
-
 namespace Boids.Core
 {
     public class MainGame : Game
@@ -56,12 +54,13 @@ namespace Boids.Core
             _optionsMonitor.OnChange(OptionsMonitor_OnChanged);
             Options = _optionsMonitor.CurrentValue;
             
-            IsMouseVisible = true;
-            Content.RootDirectory = "Content";
 
             Graphics = new GraphicsDeviceManager(this);
             InitializeViewport();
             
+            IsMouseVisible = true;
+            Content.RootDirectory = "Content";
+
             _consoleWindow = new DebugConsoleWindow(this);
         }
 
@@ -80,19 +79,18 @@ namespace Boids.Core
         
         protected override void Initialize()
         {
-            base.Initialize();
             _inputService.Initialize(this);
             _inputService.GuiKeyboardListener.KeyPressed += InputService_OnKeyPressed;
+
+            _consoleWindow.Initialize();            
             
             InitializeViewport();
-            
-            _consoleWindow.Initialize();
             
             _partitionGrid.Initialize();
             _flock.ResetFlock();
             
+            base.Initialize();            
         }
-
         
         private void InitializeViewport()
         {
@@ -103,6 +101,7 @@ namespace Boids.Core
             var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
             Graphics.PreferredBackBufferWidth = virtualWidth;
             Graphics.PreferredBackBufferHeight = virtualHeight;
+            Graphics.PreferMultiSampling = true;
             Graphics.ApplyChanges();
 
             ViewportAdapter = new BoxingViewportAdapter(window: Window, 

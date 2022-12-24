@@ -5,6 +5,7 @@
     <AssemblyName>Boids.Core.Tests</AssemblyName>
     <RootNamespace>Boids.Core</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
 <Project> 
-  <PropertyGroup>
+  <!--<PropertyGroup>
     <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And ('$(Prefer32Bit)' == 'true' Or '$(PlatformTarget)' == 'x86')">x86</_NativeRuntime>
     <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And ('$(Prefer32Bit)' == 'false' Or '$(PlatformTarget)' == 'x64')">x64</_NativeRuntime>
     <_NativeLibName Condition=" '$(_NativeRuntime)' != ''">$(MSBuildThisFileDirectory)\..\lib\native\$(_NativeRuntime)\*.dll</_NativeLibName>
@@ -11,5 +11,5 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Visible>False</Visible>
     </Content>
-  </ItemGroup>
+  </ItemGroup>-->
 </Project>

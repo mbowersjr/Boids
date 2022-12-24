@@ -47,7 +47,8 @@ namespace Boids.Core.Services
             _inputListenerComponent = new InputListenerComponent(_game, GuiKeyboardListener, GuiMouseListener, GuiGamePadListener, GuiTouchListener);
             _game.Components.Add(_inputListenerComponent);
             
-            _game.Services.AddService(new InputListenerComponentServiceLink(this, _inputListenerComponent));
+            var componentServiceLink = new InputListenerComponentServiceLink(this, _inputListenerComponent);
+            _game.Services.AddService<InputListenerComponentServiceLink>(componentServiceLink);
         }
 
         private int _scrollWheelValue = 0;
@@ -121,6 +122,7 @@ namespace Boids.Core.Services
             
             ImGui.GetIO().Fonts.AddFontDefault();
         }
+
         public bool IsDisposed { get; private set; }
 
         private void Dispose(bool disposing)
