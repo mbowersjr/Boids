@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Console
 {
     public struct ConsoleLogEntry
     {
         public string Text { get; set; }
         public DateTime Timestamp { get; set; }
         public ConsoleLogEntryLevel EntryLevel { get; set; }
-        
+
         public ConsoleLogEntry(string text, ConsoleLogEntryLevel entryLevel)
             : this(text, entryLevel, DateTime.Now)
         {

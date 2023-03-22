@@ -17,6 +17,7 @@ namespace Boids.Core.Behaviors
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
         public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
+        public int? Order { get; set; }
         
         private Vector2[] _avoidedPoints = new Vector2[3];
 
@@ -29,24 +30,34 @@ namespace Boids.Core.Behaviors
             
             foreach (var point in _avoidedPoints)
             {
-                var direction = boid.Position - point;
-                var distanceSquared = direction.LengthSquared();
-
-                if (distanceSquared < RadiusSquared)
+                var dist = Vector2.Distance(boid.Position, point);
+                if (dist > 0 && dist < Radius)
                 {
-                    Debug.Assert(Radius != null, nameof(Radius) + " != null");
-                    
-                    var scale = 1f - direction.Length() / Radius.Value;
-                    totalForce += Vector2.Normalize(direction) / scale;
+                    var diff = boid.Position - point;
+                    diff.Normalize();
+                    diff /= dist;
+                    totalForce += diff;
                     count++;
                 }
+
+                //var direction = boid.Position - point;
+                //var distanceSquared = direction.LengthSquared();
+
+                //if (distanceSquared < RadiusSquared)
+                //{
+                //    Debug.Assert(Radius != null, nameof(Radius) + " != null");
+                    
+                //    var scale = 1f - direction.Length() / Radius.Value;
+                //    totalForce += Vector2.Normalize(direction) / scale;
+                //    count++;
+                //}
             }
 
             if (count > 0)
             {
                 totalForce /= count;
             }
-
+            
             return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
         }
  

@@ -11,7 +11,8 @@ namespace Boids.Core.Behaviors
         float? Coefficient { get; set; }
         float? Radius { get; set; }
         float? RadiusSquared { get; }
-        
+        int? Order { get; set; }
+
         Vector2 Perform(Boid boid, IEnumerable<Boid> boids);
     }
 }

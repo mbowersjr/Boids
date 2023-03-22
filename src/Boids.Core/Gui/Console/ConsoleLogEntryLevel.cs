@@ -1,4 +1,4 @@
-﻿namespace Boids.Core.Gui
+﻿namespace Boids.Core.Gui.Console
 {
     /// <summary>Defines logging severity levels.</summary>
     public enum ConsoleLogEntryLevel

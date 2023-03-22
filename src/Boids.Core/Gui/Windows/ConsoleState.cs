@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Boids.Core.Gui.Windows;
+using Boids.Core.Gui.Console;
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Windows
 {
     public class ConsoleState
     {
@@ -11,7 +11,7 @@ namespace Boids.Core.Gui
         public ConsoleCommandResult CurrentResult { get; set; }
         public string InputText { get; set; }
         public byte[] InputBuffer { get; set; }
-        
+
         public const uint InputBufferSize = 1024;
         public Queue<ConsoleLogEntry> LogEntries { get; set; }
         public List<ConsoleCommandResult> CommandHistory { get; set; }
@@ -19,12 +19,12 @@ namespace Boids.Core.Gui
         public int HistoryPosition { get; set; }
         public bool AutoScroll { get; set; }
         public bool ScrollToButtom { get; set; }
-        
+
         private bool _consoleWindowVisible = false;
         public ref bool ConsoleWindowVisible => ref _consoleWindowVisible;
 
         private readonly DebugConsoleWindow _debugConsoleWindow;
-        
+
         public MainGame Game { get; set; }
 
         private readonly Dictionary<string, Func<ConsoleState, ConsoleCommandResult>> _validCommands;
@@ -33,7 +33,7 @@ namespace Boids.Core.Gui
         {
             if (string.IsNullOrWhiteSpace(command))
                 throw new ArgumentException(nameof(command));
-            
+
             if (_validCommands.ContainsKey(command))
                 throw new ArgumentException($"Command already exists in collection: '{command}'", nameof(command));
 
@@ -47,13 +47,15 @@ namespace Boids.Core.Gui
             AddValidCommand("EXIT", DebugConsoleWindowCommands.Exit);
             AddValidCommand("HELP", DebugConsoleWindowCommands.Help);
             AddValidCommand("RESET", DebugConsoleWindowCommands.Reset);
+
+            AddValidCommand("CONFIG", DebugConsoleWindowCommands.Config);
         }
-        
+
         public void SetCurrentCommand(string command, params string[] args)
         {
             if (string.IsNullOrEmpty(command))
                 throw new ArgumentException(nameof(command));
-            
+
             CurrentCommand = command;
             CurrentCommandArguments = args;
         }
@@ -61,10 +63,10 @@ namespace Boids.Core.Gui
         public void ExecuteCommand(string command, params string[] args)
         {
             ConsoleCommandResult result;
-            
+
             CurrentCommand = command;
             CurrentCommandArguments = args;
-            
+
             if (!_validCommands.ContainsKey(CurrentCommand))
             {
                 var outputText = $"Invalid command: '{CurrentCommand}'";
@@ -75,11 +77,11 @@ namespace Boids.Core.Gui
                 var validCommand = _validCommands[CurrentCommand];
                 result = validCommand.Invoke(this);
             }
-            
+
             CurrentResult = result;
             CommandHistory.Add(CurrentResult);
         }
-        
+
         public ConsoleState(DebugConsoleWindow debugConsoleWindow)
         {
             _validCommands = new Dictionary<string, Func<ConsoleState, ConsoleCommandResult>>(StringComparer.OrdinalIgnoreCase);
@@ -99,7 +101,7 @@ namespace Boids.Core.Gui
 
         public ConsoleCommandResult GetPreviousCommand()
         {
-            if (CommandHistory.Count == 0) 
+            if (CommandHistory.Count == 0)
                 return null;
 
             if (HistoryPosition > 0)
@@ -114,18 +116,18 @@ namespace Boids.Core.Gui
             var previousCommand = CommandHistory[HistoryPosition];
             return previousCommand;
         }
-        
+
         public void ClearHistory()
         {
             LogEntries.Clear();
-            
+
             CommandHistory.Clear();
             HistoryPosition = -1;
         }
-        
-        
+
+
         private static readonly System.Numerics.Vector4 DefaultLogEntryColor = new System.Numerics.Vector4(0.04f, 0.04f, 0.04f, 1.0f);
-        
+
         public static bool GetLogEntryLevelColor(ConsoleLogEntryLevel level, out System.Numerics.Vector4 color)
         {
             if (level == ConsoleLogEntryLevel.Error || level == ConsoleLogEntryLevel.Critical)
@@ -133,19 +135,19 @@ namespace Boids.Core.Gui
                 color = new System.Numerics.Vector4(1.0f, 0.4f, 0.4f, 1.0f);
                 return true;
             }
-            
+
             if (level == ConsoleLogEntryLevel.Warning)
             {
                 color = new System.Numerics.Vector4(1.0f, 0.8f, 0.2f, 1.0f);
                 return true;
             }
-            
+
             if (level == ConsoleLogEntryLevel.Debug || level == ConsoleLogEntryLevel.Trace)
             {
                 color = new System.Numerics.Vector4(0.2f, 0.2f, 0.2f, 1.0f);
                 return true;
             }
-            
+
             color = DefaultLogEntryColor;
             return false;
         }

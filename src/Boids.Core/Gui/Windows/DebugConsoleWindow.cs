@@ -4,11 +4,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Boids.Core.Services;
 using Num = System.Numerics;
-using ImGuiNET;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Input.InputListeners;
+using ImGuiNET;
+using Boids.Core.Gui.Console;
 
 namespace Boids.Core.Gui.Windows
 {
@@ -67,7 +68,6 @@ namespace Boids.Core.Gui.Windows
 
             var componentServiceLink = _game.Services.GetRequiredService<InputListenerComponentServiceLink>();
             _inputService = componentServiceLink.Service;
-            _inputService.InitImGuiIO();
         }
 
         public void Update(GameTime gameTime)
@@ -77,15 +77,9 @@ namespace Boids.Core.Gui.Windows
         public void Draw(GameTime gameTime)
         {
             _imGuiRenderer.BeforeLayout(gameTime);
-
-            ImGui.GetIO().DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            _inputService.UpdateImGuiIO();
-                        
-            if (_state.ConsoleWindowVisible)
-            {
-                DrawConsoleWindow();
-            }
-            
+             
+            ImGuiLayout();
+    
             _imGuiRenderer.AfterLayout();
         }
 
@@ -112,18 +106,17 @@ namespace Boids.Core.Gui.Windows
         
 
         private const string LogTextBoxId = "ScrollingRegion";
-        private unsafe void DrawConsoleWindow()
+        private unsafe void ImGuiLayout()
         {
+            if (!_state.ConsoleWindowVisible)
+            {
+                return;
+            }
+
             ImGui.SetNextWindowSize(new Num.Vector2(400, 600), ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowPos(new Num.Vector2(10, 10), ImGuiCond.FirstUseEver);
 
-            // ImGui.Begin(_windowTitle, ref _state.ConsoleWindowVisible);
-            
-            if (!ImGui.Begin(_windowTitle, ref _state.ConsoleWindowVisible))
-            {
-                ImGui.End();
-                return;
-            }
+            ImGui.Begin(_windowTitle, ref _state.ConsoleWindowVisible);
             
             // As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar.
             // So e.g. IsItemHovered() will return true when hovering the title bar.
@@ -200,7 +193,7 @@ namespace Boids.Core.Gui.Windows
             - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
             */
             
-             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(4, 1));
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(4, 1));
             
             foreach (var entry in _state.LogEntries)
             {
@@ -332,12 +325,6 @@ namespace Boids.Core.Gui.Windows
         {
             var currentEventChar = (char)dataPtr.EventChar;
             return 0;
-        }
-
-        private void ImGuiLayout()
-        {
-            
-        }
-        
+        }        
     }
 }

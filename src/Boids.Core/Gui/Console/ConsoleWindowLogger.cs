@@ -7,25 +7,24 @@ using Num = System.Numerics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Boids.Core.Gui.Windows;
-using Boids.Core.Gui;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Console
 {
     public class ConsoleWindowLoggerOptions
     {
         public int EventId { get; set; }
-        
-        public List<ConsoleLogEntryLevel> LogLevels { get; set; } = 
+
+        public List<ConsoleLogEntryLevel> LogLevels { get; set; } =
             new List<ConsoleLogEntryLevel>()
             {
-                ConsoleLogEntryLevel.Information, 
-                ConsoleLogEntryLevel.Warning, 
+                ConsoleLogEntryLevel.Information,
+                ConsoleLogEntryLevel.Warning,
                 ConsoleLogEntryLevel.Error
             };
-        
+
         public IDebugConsoleWindow ConsoleWindow { get; set; }
 
         public ConsoleWindowLoggerOptions(IDebugConsoleWindow consoleWindow)
@@ -39,7 +38,7 @@ namespace Boids.Core.Gui
         private readonly string _name;
         private readonly ConsoleWindowLoggerOptions _config;
         private IDebugConsoleWindow _consoleWindow;
-        
+
         public ConsoleWindowLogger(string name, ConsoleWindowLoggerOptions config)
         {
             _name = name;
@@ -48,9 +47,9 @@ namespace Boids.Core.Gui
         }
 
         public void Log<TState>(
-            LogLevel logLevel, 
-            EventId eventId, 
-            TState state, 
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
             Exception exception,
             Func<TState, Exception, string> formatter)
         {
@@ -63,7 +62,7 @@ namespace Boids.Core.Gui
             {
                 var entryLevel = logLevel.ToEntryLevel();
                 var formatted = formatter(state, exception);
-                
+
                 _consoleWindow.ConsoleState.LogEntry(formatted, entryLevel);
             }
         }
@@ -72,8 +71,8 @@ namespace Boids.Core.Gui
         {
             return _config.LogLevels.Contains(logLevel.ToEntryLevel());
         }
-        
-        public IDisposable BeginScope<TState>(TState state) => default(IDisposable);
+
+        public IDisposable BeginScope<TState>(TState state) => default;
     }
 
     public class ConsoleWindowLoggerProvider : ILoggerProvider
@@ -84,7 +83,7 @@ namespace Boids.Core.Gui
         {
             _serviceProvider = serviceProvider;
         }
-        
+
         public ILogger CreateLogger(string name)
         {
             var config = ActivatorUtilities.CreateInstance<ConsoleWindowLoggerOptions>(_serviceProvider);

@@ -23,5 +23,16 @@ namespace Boids.Core
             return new Vector2(x, y);
         }
         
+        public static void Limit(this Vector2 vector, float max)
+        {
+            if (vector.LengthSquared() > (max * max))
+            {
+                var result = vector.NormalizedCopy();
+                result *= max;
+
+                vector.X = result.X;
+                vector.Y = result.Y;
+            }
+        }
     }
 }

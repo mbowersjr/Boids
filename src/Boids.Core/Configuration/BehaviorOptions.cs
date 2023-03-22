@@ -7,5 +7,6 @@
         public bool Enabled { get; set; }
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
+        public int? Order { get; set; }
     }
 }

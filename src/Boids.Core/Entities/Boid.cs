@@ -45,11 +45,11 @@ namespace Boids.Core.Entities
 
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
-            spriteBatch.Begin(samplerState: SamplerState.PointClamp,
-                              blendState: BlendState.NonPremultiplied,
-                              sortMode: SpriteSortMode.Immediate,
-                              transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
-            
+            //spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+            //                  blendState: BlendState.NonPremultiplied,
+            //                  sortMode: SpriteSortMode.Immediate,
+            //                  transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
+
             DrawBoid(spriteBatch);
 
             if (MainGame.Options.DisplayDebugData)
@@ -68,8 +68,14 @@ namespace Boids.Core.Entities
                 }
             }
 
-            spriteBatch.End();
+            //spriteBatch.End();
         }
+
+        private float _layerDepth_BoidBody = 1f;
+        private float _layerDepth_BoidDirectionLine = 1f;
+        private float _layerDepth_BoidForceLine = 1f;
+        private float _layerDepth_BoidPropertiesText = 1f;
+        private float _layerDepth_AvoidedPointLine = 1f;
 
         private void DrawBoid(SpriteBatch spriteBatch)
         {
@@ -88,14 +94,14 @@ namespace Boids.Core.Entities
                                    sides: 32, 
                                    color: MainGame.Options.Theme.BoidColor.Value, 
                                    thickness: 2f, 
-                                   layerDepth: 1f);
+                                   layerDepth: _layerDepth_BoidBody);
 
             spriteBatch.DrawLine(point: Position,
                                  angle: Rotation,
                                  length: BoidRadius * 2,
                                  color: MainGame.Options.Theme.BoidDirectionLineColor.Value,
                                  thickness: 2f,
-                                 layerDepth: 1f);
+                                 layerDepth: _layerDepth_BoidDirectionLine);
 
             if (MainGame.Options.DisplayDebugData)
             {
@@ -103,7 +109,7 @@ namespace Boids.Core.Entities
                                      point2: Position + PreviousAcceleration,
                                      color: MainGame.Options.Theme.BoidForceLineColor.Value,
                                      thickness: 2f,
-                                     layerDepth: 0f);
+                                     layerDepth: _layerDepth_BoidForceLine);
             }
         }
 
@@ -117,7 +123,7 @@ namespace Boids.Core.Entities
                                        sides: 32,
                                        color: MainGame.Options.Theme.AvoidedPointLineColor.Value,
                                        thickness: 1f,
-                                       layerDepth: 1f);
+                                       layerDepth: _layerDepth_AvoidedPointLine);
             }
         }
 
@@ -131,10 +137,8 @@ namespace Boids.Core.Entities
             
             foreach (var point in avoidedPoints)
             {
-                var direction = Position - point;
-                var distanceSquared = direction.LengthSquared();
-
-                var pointIsActive = distanceSquared < _avoidPointsBehavior.RadiusSquared;
+                var distance = Vector2.Distance(Position, point);
+                var pointIsActive = distance < _avoidPointsBehavior.Radius;
 
                 Color lineColor;
                 
@@ -155,7 +159,7 @@ namespace Boids.Core.Entities
                                      point2: point,
                                      color: lineColor,
                                      thickness: 2f,
-                                     layerDepth: 0f);
+                                     layerDepth: _layerDepth_AvoidedPointLine);
             }
         }
         
@@ -170,18 +174,17 @@ namespace Boids.Core.Entities
             _sb.AppendFormat("R: {0:N3} rad.   \n", Rotation);
 
             var textSize = spriteFont.MeasureString(_sb);
-            var textOrigin = Vector2.One; // new Vector2(textSize.X / 2f, 0f);
-            var textPosition = new Vector2(Position.X - textSize.X / 2f, Position.Y + 15f);
-
+            var textPosition = new Vector2(Position.X - textSize.X * 0.5f, Position.Y + BoidRadius * 1.5f);
+            
             spriteBatch.DrawString(spriteFont: spriteFont,
                                    text: _sb,
                                    position: textPosition,
-                                   color: MainGame.Options.Theme.BoidPropertiesTextColor.Value,
+                                   color: MainGame.Options.Theme.BoidPropertiesTextColor.Value,                                   
                                    rotation: 0f,
-                                   origin: textOrigin,
+                                   origin: Vector2.Zero,
                                    scale: 1f,
                                    effects: SpriteEffects.None,
-                                   layerDepth: 0f);
+                                   layerDepth: _layerDepth_BoidPropertiesText);
         }
         
         public void Update(GameTime gameTime)
@@ -194,10 +197,11 @@ namespace Boids.Core.Entities
             PreviousAcceleration = Acceleration;
             
             Velocity += Acceleration * elapsedSeconds;
-            Velocity = Velocity.Truncate(MainGame.Options.Limits.MaxVelocity);
+            Velocity.Limit(MainGame.Options.Limits.MaxVelocity);
             
             Position += Velocity * elapsedSeconds;
             Rotation = Velocity.ToRadians();
+
             Acceleration = Vector2.Zero;
 
             WrapAroundViewportEdges();
@@ -223,7 +227,7 @@ namespace Boids.Core.Entities
                 _position.Y = 0f;
             }
         }
-
+        
         public void ApplyForce(Vector2 force)
         {
             // Implements Reynolds steering formula: steering force = desired velocity - current velocity
@@ -231,25 +235,25 @@ namespace Boids.Core.Entities
 
             var desiredVelocity = Velocity + force;
             desiredVelocity.Normalize();
-            desiredVelocity *= MainGame.Options.Limits.MaxVelocity;
-
+            desiredVelocity *= MainGame.Options.Limits.MaxVelocity;            
             var adjustment = desiredVelocity - Velocity;
-            adjustment = adjustment.Truncate(MainGame.Options.Limits.MaxForce);
+            adjustment.Limit(MainGame.Options.Limits.MaxForce);
             
             Acceleration += adjustment;
         }
 
-        // public void Seek(Vector2 target)
-        // {
-        //     var desiredPosition = target - _position;
-        //     desiredPosition.Normalize();
-        //     desiredPosition *= MainGame.Options.Limits.MaxVelocity;
-        //     
-        //     var adjustment = desiredPosition - Velocity;
-        //     adjustment.Truncate(MainGame.Options.Limits.MaxForce);
-        //
-        //     ApplyForce(adjustment);
-        // }
+        //public void ApplyForce_New(Vector2 force)
+        //{
+        //    Acceleration += force;
+        //}
+
+        //public void Align(Vector2 target)
+        //{
+        //    var steer = target - _position;
+        //    steer.Limit(MainGame.Options.Limits.MaxVelocity);
+            
+        //    ApplyForce_New(steer);
+        //}
 
         // public void Flee(Vector2 from)
         // {

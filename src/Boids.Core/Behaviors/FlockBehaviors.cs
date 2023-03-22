@@ -14,12 +14,16 @@ namespace Boids.Core.Behaviors
         List<IBehavior> Behaviors { get; }
         void LoadBehaviors();
         void Reset();
+
         IBehavior GetBehavior(string name);
+        IEnumerable<IBehavior> EnumerateBehaviors();
     }
 
     public class FlockBehaviors : IFlockBehaviors
     {
         public List<IBehavior> Behaviors { get; private set; } = new List<IBehavior>();
+        
+        private List<IBehavior> _orderedBehaviors;
 
         private readonly ILogger<FlockBehaviors> _logger;
 
@@ -39,6 +43,11 @@ namespace Boids.Core.Behaviors
             return Behaviors.FirstOrDefault(b => b.Name.EqualsIgnoreCase(name));
         }
         
+        public IEnumerable<IBehavior> EnumerateBehaviors()
+        {
+            return _orderedBehaviors;
+        }
+
         public void LoadBehaviors()
         {
             _logger.LogInformation("Loading behaviors ...");
@@ -75,6 +84,7 @@ namespace Boids.Core.Behaviors
                     instance.Enabled = options.Enabled;
                     instance.Coefficient = options.Coefficient;
                     instance.Radius = options.Radius;
+                    instance.Order = options.Order;
                 }
                 else
                 {
@@ -83,9 +93,28 @@ namespace Boids.Core.Behaviors
                     instance.Enabled = true;
                     instance.Coefficient = 1f;
                     instance.Radius = 25f;
+                    instance.Order = null;
                 }
 
                 Behaviors.Add(instance);
+            }
+
+            _orderedBehaviors = Behaviors.OrderBy(x => x.Order.HasValue).ThenBy(x => x.Order ?? int.MaxValue).ThenBy(x => x.Name).ToList();
+
+            _logger.LogDebug("Behavior excecution order:");
+            for (int i = 0; i < _orderedBehaviors.Count; i++)
+            {
+                var behavior = _orderedBehaviors[i];
+                if (behavior.Order.HasValue)
+                {
+                    _logger.LogDebug("#{Index}. {BehaviorName} (Order: {BehaviorOrder})", i+1, behavior.Name, behavior.Order);
+                }
+                else
+                {
+                    _logger.LogDebug("#{Index}. {BehaviorName}", i+1, behavior.Name);
+                }
+                
+
             }
         }
     }

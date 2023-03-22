@@ -1,6 +1,7 @@
 ﻿using System;
+using Boids.Core.Gui.Windows;
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Console
 {
     public static class ConsoleLogEntryExtensions
     {
@@ -10,11 +11,11 @@ namespace Boids.Core.Gui
         public static void LogWarning(this ConsoleState state, string text, params object[] args) => state.LogEntry(text, ConsoleLogEntryLevel.Warning, args);
         public static void LogError(this ConsoleState state, string text, params object[] args) => state.LogEntry(text, ConsoleLogEntryLevel.Error, args);
         public static void LogCritical(this ConsoleState state, string text, params object[] args) => state.LogEntry(text, ConsoleLogEntryLevel.Critical, args);
-        
+
         public static void LogEntry(this ConsoleState state, string text, ConsoleLogEntryLevel entryLevel, params object[] args)
         {
             if (string.IsNullOrEmpty(text)) return;
-            
+
             var entry = new ConsoleLogEntry(string.Format(text, args), entryLevel, DateTime.Now);
             state.LogEntries.Enqueue(entry);
         }

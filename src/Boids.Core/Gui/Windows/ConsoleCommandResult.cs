@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using MonoGame.Extended;
 using Microsoft.Extensions.Logging;
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Windows
 {
     public class ConsoleCommandResult
     {
@@ -18,7 +18,7 @@ namespace Boids.Core.Gui
             WasError = wasError;
         }
 
-        public static ConsoleCommandResult Create(string inputText, string outputText, bool wasError = false) => 
+        public static ConsoleCommandResult Create(string inputText, string outputText, bool wasError = false) =>
             new ConsoleCommandResult(inputText, outputText, wasError);
 
         public static readonly ConsoleCommandResult EmptyResult = new ConsoleCommandResult(null, null, false);

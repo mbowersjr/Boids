@@ -54,7 +54,7 @@ namespace Boids.Core.Services
         private int _scrollWheelValue = 0;
         private List<int> _keys = new List<int>();
 
-        public void UpdateImGuiIO()
+        /*public void UpdateImGuiIO()
         {
             var io = ImGui.GetIO();
 
@@ -83,8 +83,9 @@ namespace Boids.Core.Services
             var scrollDelta = mouse.ScrollWheelValue - _scrollWheelValue;
             io.MouseWheel = scrollDelta > 0 ? 1 : scrollDelta < 0 ? -1 : 0;
             _scrollWheelValue = mouse.ScrollWheelValue;
-        }
+        }*/
 
+/*
         public void InitImGuiIO()
         {
             var io = ImGui.GetIO();
@@ -121,7 +122,7 @@ namespace Boids.Core.Services
             // };
             
             ImGui.GetIO().Fonts.AddFontDefault();
-        }
+        }*/
 
         public bool IsDisposed { get; private set; }
 

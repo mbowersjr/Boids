@@ -19,6 +19,7 @@ namespace Boids.Core.Behaviors
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
         public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
+        public int? Order { get; set; }
 
         private MouseState _mouseState;
         

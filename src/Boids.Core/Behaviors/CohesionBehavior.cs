@@ -16,13 +16,14 @@ namespace Boids.Core.Behaviors
         public float? Coefficient { get; set; }
         public float? Radius { get; set; }
         public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
+        public int? Order { get; set; }
 
         
         public Vector2 Perform(Boid boid, IEnumerable<Boid> boids)
         {
             // Steers toward the average position of all nearby boids
             
-            var desiredPosition = Vector2.Zero;
+            var force = Vector2.Zero;
             var averagePositions = Vector2.Zero;
             var count = 0;
 
@@ -34,9 +35,9 @@ namespace Boids.Core.Behaviors
                 if (!other.IsActive)
                     continue;
 
-                var distanceSquared = Vector2.DistanceSquared(boid.Position, other.Position);
-                
-                if (distanceSquared < RadiusSquared)
+                var dist = Vector2.Distance(boid.Position, other.Position);
+
+                if (dist > 0 && dist < Radius)
                 {
                     averagePositions += other.Position;
                     count++;
@@ -46,12 +47,10 @@ namespace Boids.Core.Behaviors
             if (count > 0)
             {
                 averagePositions /= count;
-                
-                desiredPosition = averagePositions - boid.Position;
-                desiredPosition.Normalize();
-            }
-
-            return desiredPosition;
+                force = boid.Position - averagePositions;
+            }            
+            
+            return force;
         }
     }
 }

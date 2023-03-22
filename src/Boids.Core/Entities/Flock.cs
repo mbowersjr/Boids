@@ -70,6 +70,11 @@ namespace Boids.Core.Entities
 
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
+            spriteBatch.Begin(samplerState: SamplerState.PointClamp,
+                              blendState: BlendState.NonPremultiplied,
+                              sortMode: SpriteSortMode.Deferred,
+                              transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
+
             foreach (var boid in Boids)
             {
                 if (!boid.IsActive)
@@ -77,6 +82,8 @@ namespace Boids.Core.Entities
 
                 boid.Draw(gameTime, spriteBatch, spriteFont);
             }
+
+            spriteBatch.End();
         }
 
         public void Update(GameTime gameTime)
