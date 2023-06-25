@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
-using Boids.Core.Entities;
 using Boids.Core;
+using Boids.Core.Entities;
 
 namespace Boids.Core.Behaviors
 {
@@ -47,10 +47,22 @@ namespace Boids.Core.Behaviors
             if (count > 0)
             {
                 averagePositions /= count;
-                force = boid.Position - averagePositions;
-            }            
+                force = Seek(boid, averagePositions);
+            }
             
             return force;
+        }
+
+        private Vector2 Seek(Boid boid, Vector2 target)
+        {
+            var desired = target - boid.Position;
+            desired.Normalize();
+            desired *= MainGame.Options.Limits.MaxVelocity;
+            
+            var steering = desired - boid.Velocity;
+            steering.Limit(MainGame.Options.Limits.MaxForce);
+
+            return steering;
         }
     }
 }

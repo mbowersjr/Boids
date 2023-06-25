@@ -14,6 +14,4 @@ namespace Boids.Core
                 .Run();
         }
     }
-
-
 }

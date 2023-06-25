@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
-using Boids.Core.Entities;
 using Boids.Core;
+using Boids.Core.Entities;
 
 namespace Boids.Core.Behaviors
 {
@@ -41,21 +41,18 @@ namespace Boids.Core.Behaviors
                     sumVelocities += other.Velocity;
                     count++;
                 }
-
-                //var distanceSquared = Vector2.DistanceSquared(boid.Position, other.Position);
-                
-                //if (distanceSquared < RadiusSquared)
-                //{
-                //    averagePositions += other.Position;
-                //    count++;
-                //}
             }
 
             if (count > 0)
             {
-                force = sumVelocities /= count;
+                sumVelocities /= count;
+                sumVelocities.Normalize();
+                sumVelocities *= MainGame.Options.Limits.MaxVelocity;
+
+                force = sumVelocities - boid.Velocity;
+                force.Limit(MainGame.Options.Limits.MaxForce);
             }
-            
+
             return force;
         }
     }

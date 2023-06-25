@@ -104,7 +104,7 @@ namespace Boids.Core.Entities
                     var force = behavior.Perform(boid, Boids);
                     force *= behavior.Coefficient.GetValueOrDefault();
                     
-                    boid.ApplyForce(force);
+                    boid.Acceleration += force;
                 }
                 
                 boid.Update(gameTime);

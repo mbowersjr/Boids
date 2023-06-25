@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using MonoGame.Extended;
-using Boids.Core.Entities;
-using Boids.Core;
-using Boids.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
+using Boids.Core;
+using Boids.Core.Entities;
+using Boids.Core.Services;
 
 namespace Boids.Core.Behaviors
 {
@@ -28,16 +28,41 @@ namespace Boids.Core.Behaviors
             _mouseState = Mouse.GetState();
 
             var direction = _mouseState.Position.ToVector2() - boid.Position;
-            var distanceSquared = direction.LengthSquared();
+            var distance = direction.Length();
 
             var totalForce = Vector2.Zero;
             
-            if (distanceSquared < RadiusSquared)
+            if (distance < Radius)
             {
                 totalForce = direction;
             }
 
-            return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
+            return totalForce;
+        }
+
+        private Vector2 Arrive(Boid boid, Vector2 target)
+        {
+            var desired = target - boid.Position;
+            var dist = desired.Length();
+            
+            float mag;
+
+            if (dist < MainGame.Options.Limits.ArrivalDistance)
+            {
+                mag = ScaleHelper.ScaleValue(dist, 0f, MainGame.Options.Limits.ArrivalDistance, 0f, MainGame.Options.Limits.MaxVelocity, true);
+            }
+            else
+            {
+                mag = MainGame.Options.Limits.MaxVelocity;
+            }
+
+            desired.Normalize();
+            desired *= mag;
+            
+            var steer = desired - boid.Position;
+            steer.Limit(MainGame.Options.Limits.MaxForce);
+            
+            return steer;
         }
     }
 }

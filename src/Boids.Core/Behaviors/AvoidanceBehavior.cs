@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
-using Boids.Core.Entities;
 using Boids.Core;
+using Boids.Core.Entities;
 
 namespace Boids.Core.Behaviors
 {
@@ -43,18 +43,6 @@ namespace Boids.Core.Behaviors
                     totalForce += diff;
                     count++;
                 }
-
-                //var direction = boid.Position - other.Position;
-                //var distanceSquared = direction.LengthSquared();
-
-                //if (distanceSquared < RadiusSquared)
-                //{
-                //    Debug.Assert(Radius != null, nameof(Radius) + " != null");
-                    
-                //    var scale = 1f - direction.Length() / Radius.Value;
-                //    totalForce += Vector2.Normalize(direction) / scale;
-                //    count++;
-                //}
             }
 
             if (count > 0)
@@ -62,17 +50,15 @@ namespace Boids.Core.Behaviors
                 totalForce /= count;
             }
 
-            //if (totalForce.Length() > 0)
-            //{
-            //    totalForce.Normalize();
-            //    totalForce *= MainGame.Options.Limits.MaxVelocity;
-            //    totalForce -= boid.Velocity;
-            //    totalForce.Limit(MainGame.Options.Limits.MaxForce);
-            //}
+            if (totalForce.Length() > 0)
+            {
+                totalForce.Normalize();
+                totalForce *= MainGame.Options.Limits.MaxVelocity;
+                totalForce -= boid.Velocity;
+                totalForce.Limit(MainGame.Options.Limits.MaxForce);
+            }
 
             return totalForce;
-            
-            //return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
         }
     }
 }

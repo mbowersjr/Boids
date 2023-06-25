@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -15,7 +16,6 @@ using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
 using Boids.Core.Gui.Windows;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Boids.Core
 {

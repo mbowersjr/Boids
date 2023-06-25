@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Boids.Core;
-using Boids.Core.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
+using Boids.Core;
+using Boids.Core.Entities;
 
 namespace Boids.Core.Behaviors
 {

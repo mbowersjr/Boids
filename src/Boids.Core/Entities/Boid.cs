@@ -227,26 +227,32 @@ namespace Boids.Core.Entities
                 _position.Y = 0f;
             }
         }
-        
-        public void ApplyForce(Vector2 force)
-        {
-            // Implements Reynolds steering formula: steering force = desired velocity - current velocity
-            // Reference: Nature of Code, chapter 6.3 (https://natureofcode.com/book/chapter-6-autonomous-agents/)
 
-            var desiredVelocity = Velocity + force;
-            desiredVelocity.Normalize();
-            desiredVelocity *= MainGame.Options.Limits.MaxVelocity;            
-            var adjustment = desiredVelocity - Velocity;
-            adjustment.Limit(MainGame.Options.Limits.MaxForce);
-            
-            Acceleration += adjustment;
-        }
-
-        //public void ApplyForce_New(Vector2 force)
+        //private Vector2 Arrive(Vector2 target)
         //{
-        //    Acceleration += force;
-        //}
+        //    var desired = target - _position;
+        //    var dist = desired.Length();
+            
+        //    float mag;
 
+        //    if (dist < MainGame.Options.Limits.ArrivalDistance)
+        //    {
+        //        mag = ScaleHelper.ScaleValue(dist, 0f, 100f, 0f, MainGame.Options.Limits.MaxVelocity);
+        //    }
+        //    else
+        //    {
+        //        mag = MainGame.Options.Limits.MaxVelocity;
+        //    }
+
+        //    desired.Normalize();
+        //    desired *= mag;
+            
+        //    var steer = desired - _position;
+        //    steer.Limit(MainGame.Options.Limits.MaxForce);
+            
+        //    _acceleration += steer;
+        //}
+      
         //public void Align(Vector2 target)
         //{
         //    var steer = target - _position;

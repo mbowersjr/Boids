@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
-using Boids.Core.Entities;
 using Boids.Core;
+using Boids.Core.Entities;
 
 namespace Boids.Core.Behaviors
 {
@@ -39,26 +39,14 @@ namespace Boids.Core.Behaviors
                     totalForce += diff;
                     count++;
                 }
-
-                //var direction = boid.Position - point;
-                //var distanceSquared = direction.LengthSquared();
-
-                //if (distanceSquared < RadiusSquared)
-                //{
-                //    Debug.Assert(Radius != null, nameof(Radius) + " != null");
-                    
-                //    var scale = 1f - direction.Length() / Radius.Value;
-                //    totalForce += Vector2.Normalize(direction) / scale;
-                //    count++;
-                //}
             }
 
             if (count > 0)
             {
                 totalForce /= count;
             }
-            
-            return totalForce != Vector2.Zero ? totalForce : Vector2.Zero;
+
+            return totalForce;
         }
  
         // ReSharper disable UnusedMember.Local
