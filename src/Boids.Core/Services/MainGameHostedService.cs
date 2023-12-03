@@ -25,19 +25,15 @@ namespace Boids.Core.Services
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _appLifetime.ApplicationStarted.Register(() =>
-            {
-                _logger.LogTrace("Application lifetime started");
-                
-                _logger.LogTrace("Getting MainGame instance ...");
+            _appLifetime.ApplicationStarted.Register(() => {
+                _logger.LogTrace("Creating game instance");
                 _game = _services.GetRequiredService<MainGame>();
 
-                _logger.LogTrace("Beginning game loop ...");
-                
+                _logger.LogTrace("Beginning game loop");
                 _game.Run();
-                
-                _logger.LogTrace("Game loop stopped");
-                
+                _logger.LogTrace("Returned from game loop");
+
+                _logger.LogTrace("Stopping application...");
                 _appLifetime.StopApplication();
             });
 
@@ -46,12 +42,8 @@ namespace Boids.Core.Services
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Application lifetime stopping ...");
-            
             _logger.LogTrace("Exiting game ...");
             _game.Exit();
-            
-            _logger.LogTrace("Application lifetime stopped");
 
             return Task.CompletedTask;
         }

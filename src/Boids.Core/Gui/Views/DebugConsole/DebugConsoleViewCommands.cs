@@ -2,45 +2,52 @@
 using System.Linq;
 using System.Reflection;
 using Boids.Core.Configuration;
-using Boids.Core.Entities;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Boids.Core.Gui.Windows
+namespace Boids.Core.Gui.Views
 {
-    public static class DebugConsoleWindowCommands
+    public static class DebugConsoleViewCommands
     {
-        public static ConsoleCommandResult Clear(ConsoleState state)
+        public static DebugConsoleCommandResult Clear(DebugConsoleState state)
         {
             state.ClearHistory();
-            return ConsoleCommandResult.Create(state.InputText, string.Empty);
+            return DebugConsoleCommandResult.Create(state.InputText, string.Empty);
         }
 
-        public static ConsoleCommandResult Exit(ConsoleState state)
+        public static DebugConsoleCommandResult Exit(DebugConsoleState state)
         {
-            state.Game.Exit();
-            return ConsoleCommandResult.Create(state.InputText, "Exiting game ...");
-        }
-
-        public static ConsoleCommandResult Reset(ConsoleState state)
-        {
-            state.Game.Reset();
-            return ConsoleCommandResult.Create(state.InputText, "Simulation reset");
-        }
-
-        public static ConsoleCommandResult Help(ConsoleState state)
-        {
-            var output = "-------------------------\nBoids Flocking Simulation\n-------------------------";
-            return ConsoleCommandResult.Create(state.InputText, output);
-        }
-
-        public static ConsoleCommandResult Pause(ConsoleState state)
-        {
-            state.Game.TogglePaused();
             
-            var output = state.Game.IsPaused ? "Game paused" : "Game unpaused";
-            return ConsoleCommandResult.Create(state.InputText, output);
+            return DebugConsoleCommandResult.Create(state.InputText, "Exiting game ...");
         }
 
-        public static ConsoleCommandResult Config(ConsoleState state)
+        public static DebugConsoleCommandResult Reset(DebugConsoleState state)
+        {
+            var game = Program.Host.Services.GetRequiredService<MainGame>();
+            game.Reset();
+
+            return DebugConsoleCommandResult.Create(state.InputText, "Game reset");
+        }
+
+        public static DebugConsoleCommandResult Help(DebugConsoleState state)
+        {
+            var output = 
+@"------------------------- 
+Boids Flocking Simulation
+-------------------------";
+
+            return DebugConsoleCommandResult.Create(state.InputText, output);
+        }
+
+        public static DebugConsoleCommandResult Pause(DebugConsoleState state)
+        {
+            var game = Program.Host.Services.GetRequiredService<MainGame>();
+            game.IsPaused = !game.IsPaused;
+
+            var output = game.IsPaused ? "Game paused" : "Game unpaused";
+            return DebugConsoleCommandResult.Create(state.InputText, output);
+        }
+
+        public static DebugConsoleCommandResult Config(DebugConsoleState state)
         {
             string output;
 
@@ -50,7 +57,7 @@ namespace Boids.Core.Gui.Windows
             var settings = MainGame.Options;
 
             var settingProperty = GetSettingProperty(settings, settingName);
-            
+
             if (settingProperty == null)
             {
                 output = $"Setting \"{settingName}\" does not exist.";
@@ -72,7 +79,7 @@ namespace Boids.Core.Gui.Windows
                 }
             }
 
-            return ConsoleCommandResult.Create(state.InputText, output);
+            return DebugConsoleCommandResult.Create(state.InputText, output);
         }
 
         private static PropertyInfo GetSettingProperty(BoidsOptions options, string settingName)

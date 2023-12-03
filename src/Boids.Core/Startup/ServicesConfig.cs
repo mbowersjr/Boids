@@ -1,14 +1,14 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Boids.Core.Behaviors;
 using Boids.Core.Configuration;
 using Boids.Core.Entities;
 using Boids.Core.Gui;
-using Boids.Core.Gui.Windows;
+using Boids.Core.Gui.Console;
+using Boids.Core.Gui.Views;
 using Boids.Core.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using MonoGame.Extended.Input.InputListeners;
+using Microsoft.Xna.Framework;
 
 namespace Boids.Core.Startup
 {
@@ -19,18 +19,23 @@ namespace Boids.Core.Startup
         /// </summary>
         public static void ConfigureServices(HostBuilderContext context, IServiceCollection services)
         {
-            services.AddTransient<IEnumCacheProvider, EnumCacheProvider>();
-            services.AddTransient<InputListenerService>();
-            services.AddTransient<IFlock, Flock>();
-            services.AddTransient<IFlockBehaviors, FlockBehaviors>();
-            services.AddTransient<PartitionGrid>();
-            services.AddTransient<PartitionGridRenderer>();
-            
-            //services.AddTransient<ConsoleWindowLoggerOptions, ConsoleWindowLoggerOptions>();
-            services.AddSingleton<IDebugConsoleWindow, DebugConsoleWindow>();
+            services.AddSingleton<IEnumCacheProvider, EnumCacheProvider>();
+            services.AddSingleton<InputListenerService>();
+            services.AddSingleton<IFlockBehaviors, FlockBehaviors>();
+            services.AddSingleton<PartitionGrid>();
+            services.AddSingleton<PartitionGridRenderer>();
+            services.AddSingleton<IFlock, Flock>();
+
+            services.AddTransient<DebugConsoleState>();
+            services.AddTransient<DebugConsoleLoggerProvider>();
+            services.AddTransient<DebugConsoleLogger>();
+
+            // services.AddSingleton<ImGuiRenderer>();
+            services.AddSingleton<GuiManager>();
+            services.AddSingleton<FlockListView>();
+            services.AddSingleton<DebugConsoleView>();
 
             services.AddSingleton<MainGame>();
-            
             services.AddHostedService<MainGameHostedService>();
 
             services.Configure<BoidsOptions>(context.Configuration.GetSection("Boids"));

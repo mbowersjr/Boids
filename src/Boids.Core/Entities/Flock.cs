@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Boids.Core.Behaviors;
+using Boids.Core.Configuration;
+using Microsoft.Extensions.Options;
 using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 
@@ -16,8 +18,7 @@ namespace Boids.Core.Entities
     {
         List<Boid> Boids { get; }
         IFlockBehaviors Behaviors { get; }
-        bool Paused { get; set; }
-        void ResetFlock();
+        void ResetFlock(RectangleF spawnArea, BoidsOptions options);
         void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont);
         void Update(GameTime gameTime);
     }
@@ -26,14 +27,13 @@ namespace Boids.Core.Entities
     {
         public List<Boid> Boids { get; private set; } = new List<Boid>();
         public IFlockBehaviors Behaviors { get; private set; }
-        public bool Paused { get; set; }
 
         public Flock(IFlockBehaviors behaviors)
         {
             Behaviors = behaviors;
         }
 
-        public void ResetFlock()
+        public void ResetFlock(RectangleF spawnArea, BoidsOptions options)
         {
             Boids.Clear();
             Behaviors.Reset();
@@ -41,27 +41,24 @@ namespace Boids.Core.Entities
             for (var i = 0; i < MainGame.Options.Count; i++)
             {
                 var boid = new Boid(this);
-                InitializeBoid(boid);
+                InitializeBoid(boid, spawnArea, options.Limits.SpawnVelocity.Range.Value);
                 
                 Boids.Add(boid);
             }
         }
 
-        public void InitializeBoid(Boid boid)
+        public void InitializeBoid(Boid boid, RectangleF spawnArea, Range<float> spawnVelocityRange)
         {
             boid.IsActive = true;
             
-            var spawnArea = MainGame.ViewportAdapter.BoundingRectangle.ToRectangleF();
             spawnArea.Inflate(-200f, -200f);
 
-            var position = MainGame.Random.NextVector2Within(ref spawnArea);
-            Debug.Assert(MainGame.ViewportAdapter.BoundingRectangle.Contains(position), "Spawn position is not within viewport bounds");
+            var position = FastRandomInst.NextVector2Within(ref spawnArea);
 
             boid.Position = position;
-            
-            Vector2 velocity;
-            MainGame.Random.NextUnitVector(out velocity);
-            velocity *= MainGame.Random.NextSingle(MainGame.Options.Limits.SpawnVelocity.Range.Value);
+
+            FastRandomInst.NextUnitVector(out var velocity);
+            velocity *= FastRandomInst.NextSingle(spawnVelocityRange);
             boid.Velocity = velocity;
             
             boid.Rotation = boid.Velocity.ToRadians();
@@ -88,9 +85,6 @@ namespace Boids.Core.Entities
 
         public void Update(GameTime gameTime)
         {
-            if (Paused)
-                return;
-            
             foreach (var boid in Boids)
             {
                 if (!boid.IsActive)

@@ -15,7 +15,7 @@ using MonoGame.Extended.ViewportAdapters;
 using Boids.Core.Entities;
 using Boids.Core.Services;
 using Boids.Core.Configuration;
-using Boids.Core.Gui.Windows;
+using Boids.Core.Gui;
 
 namespace Boids.Core
 {
@@ -28,25 +28,26 @@ namespace Boids.Core
         
         private readonly IFlock _flock;
         private readonly PartitionGrid _partitionGrid;
-        private readonly InputListenerService _inputService;
+        private InputListenerService _inputService;
         private readonly IOptionsMonitor<BoidsOptions> _optionsMonitor;
         private readonly ILogger<MainGame> _logger;
-        // private readonly IServiceProvider _serviceProvider;
 
-        private readonly IDebugConsoleWindow _consoleWindow;
 
         public static ViewportAdapter ViewportAdapter { get; private set; }
         public static BoidsOptions Options { get; set; }
-        public static FastRandom Random { get; private set; } = new FastRandom();
         
+        private GuiManager _guiManager;
+        private IServiceProvider _serviceProvider;
+
         public MainGame(IFlock flock,
-                        InputListenerService inputService,
                         PartitionGrid partitionGrid,
                         IOptionsMonitor<BoidsOptions> optionsMonitor,
-                        ILogger<MainGame> logger)
+                        ILogger<MainGame> logger,
+                        IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider;
+
             _flock = flock;
-            _inputService = inputService;
             _optionsMonitor = optionsMonitor;
             _partitionGrid = partitionGrid;
             _logger = logger;
@@ -60,34 +61,35 @@ namespace Boids.Core
             
             IsMouseVisible = true;
             Content.RootDirectory = "Content";
-
-            _consoleWindow = new DebugConsoleWindow(this);
         }
 
         private void OptionsMonitor_OnChanged(BoidsOptions options)
         {
             Options = options;
             InitializeViewport();
-            
-            _flock.ResetFlock();
+
+            Reset();
         }
 
         public void Reset()
         {
-            _flock?.ResetFlock();
+            _flock?.ResetFlock(GraphicsDevice.Viewport.Bounds.ToRectangleF(), Options);
         }
         
         protected override void Initialize()
         {
-            _inputService.Initialize(this);
-            _inputService.GuiKeyboardListener.KeyPressed += InputService_OnKeyPressed;
+            _guiManager = ActivatorUtilities.CreateInstance<GuiManager>(_serviceProvider);
+            _guiManager.Initialize();
 
-            _consoleWindow.Initialize();            
-            
+            _inputService = new InputListenerService(this);
+            _inputService.Initialize();
+            _inputService.GuiKeyboardListener.KeyPressed += InputService_OnKeyPressed;
+   
             InitializeViewport();
             
             _partitionGrid.Initialize();
-            _flock.ResetFlock();
+            
+            _flock.ResetFlock(GraphicsDevice.Viewport.Bounds.ToRectangleF(), Options);
             
             base.Initialize();            
         }
@@ -122,22 +124,10 @@ namespace Boids.Core
             }
         }
 
-        public bool IsPaused => _flock.Paused;
-        public void TogglePaused()
-        {
-            if (_flock != null)
-            {
-                _flock.Paused = !_flock.Paused;
-            }
-        }
+        public bool IsPaused { get; set; }
         
         private void InputService_OnKeyPressed(object sender, KeyboardEventArgs args)
         {
-            if (_consoleWindow.ConsoleState.IsInputFocused)
-            {
-                return;
-            }
-            
             if (args.Key == Keys.Escape || args.Key == Keys.Q)
             {
                 LogInputCommand("Exit game");
@@ -147,20 +137,19 @@ namespace Boids.Core
             if (args.Key == Keys.P)
             {
                 LogInputCommand("Toggle pause game");
-                _flock.Paused = !_flock.Paused;
+                IsPaused = !IsPaused;
             }
 
             if (args.Key == Keys.R)
             {
                 LogInputCommand("Reset flock");
-                _flock?.ResetFlock();
+                _flock.ResetFlock(GraphicsDevice.Viewport.Bounds.ToRectangleF(), Options);
             }
 
             if (args.Key == Keys.F1)
             {
                 LogInputCommand("Toggle displaying debug data");
                 Options.DisplayDebugData = !Options.DisplayDebugData;
-                _consoleWindow.IsVisible = Options.DisplayDebugData;
             }
 
             if (args.Key == Keys.OemComma && args.Modifiers.HasFlag(KeyboardModifiers.Control))
@@ -249,8 +238,6 @@ namespace Boids.Core
             
             _spriteFont = Content.Load<SpriteFont>("Fonts/FixedWidth");
             Boid.BoidSprite = Content.Load<Texture2D>("Images/Boid_32x32");
-            
-            _consoleWindow.LoadContent();
         }
 
         protected override void UnloadContent()
@@ -258,28 +245,33 @@ namespace Boids.Core
             _spriteBatch.Dispose();
             Boid.BoidSprite.Dispose();
 
-            _consoleWindow.UnloadContent();
+            _guiManager.Dispose();
         }
 
         protected override void Update(GameTime gameTime)
-        {            
-            _flock.Update(gameTime);
-            _partitionGrid.UpdateActiveCells(_flock.Boids);
+        {
+            if (!IsPaused)
+            {
+                _flock.Update(gameTime);
+                _partitionGrid.UpdateActiveCells(_flock.Boids);
+
+            }
             
-            _consoleWindow.Update(gameTime);
-            
+            _guiManager.Update(gameTime);
+
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Options.Theme.BackgroundColor.Value);
-
+            
             _partitionGrid.Draw(gameTime);
             
             _flock.Draw(gameTime, _spriteBatch, _spriteFont);
 
-            _consoleWindow.Draw(gameTime);
+            _guiManager.Draw(gameTime);
         }
+
     }
 }

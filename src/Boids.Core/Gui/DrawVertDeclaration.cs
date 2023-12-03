@@ -31,5 +31,4 @@ namespace Boids.Core.Gui
                 new VertexElement(16, VertexElementFormat.Color, VertexElementUsage.Color, 0)
             );
         }
-    }
-}
+    }}

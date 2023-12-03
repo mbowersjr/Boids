@@ -1,4 +1,5 @@
 ﻿using Boids.Core.Gui;
+using Boids.Core.Gui.Console;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

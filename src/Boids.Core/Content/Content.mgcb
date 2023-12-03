@@ -32,3 +32,20 @@
 /processorParam:TextureFormat=Color
 /build:Images/Boid_32x32.png
 
+#begin Fonts/NotoSans-Bold.ttf
+/copy:Fonts/NotoSans-Bold.ttf
+
+#begin Fonts/NotoSans-Regular.ttf
+/copy:Fonts/NotoSans-Regular.ttf
+
+#begin Fonts/Roboto-Bold.ttf
+/copy:Fonts/Roboto-Bold.ttf
+
+#begin Fonts/Roboto-Regular.ttf
+/copy:Fonts/Roboto-Regular.ttf
+
+#begin Fonts/RobotoMono-Bold.ttf
+/copy:Fonts/RobotoMono-Bold.ttf
+
+#begin Fonts/RobotoMono-Regular.ttf
+/copy:Fonts/RobotoMono-Regular.ttf

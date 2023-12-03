@@ -1,0 +1,26 @@
+<Project> 
+  <!--<PropertyGroup>
+    <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And ('$(Prefer32Bit)' == 'true' Or '$(PlatformTarget)' == 'x86')">x86</_NativeRuntime>
+    <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And ('$(Prefer32Bit)' == 'false' Or '$(PlatformTarget)' == 'x64')">x64</_NativeRuntime>
+    <_NativeLibName Condition=" '$(_NativeRuntime)' != ''">$(MSBuildThisFileDirectory)\..\lib\native\$(_NativeRuntime)\*.dll</_NativeLibName>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Content Include="$(_NativeLibName)">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </Content>
+  </ItemGroup>-->
+
+  <Target Name="DisplayOutputPaths" BeforeTargets="Build">
+    <Message Text="BuildDir:                   $(BuildDir)"                   Importance="High" />
+    <Message Text="ProjectBuildDirectoryName:  $(ProjectBuildDirectoryName)"  Importance="High" />
+    <Message Text="ProjectOutputPath:          $(ProjectOutputPath)"          Importance="High" />
+    <Message Text="BaseOutDir:                 $(BaseOutDir)"                 Importance="High" />
+    <Message Text="BasePublishDir:             $(BasePublishDir)"             Importance="High" />
+    <Message Text="BaseIntermediateOutputPath: $(BaseIntermediateOutputPath)" Importance="High" />
+    <Message Text="BaseOutputPath:             $(BaseOutputPath)"             Importance="High" />
+    <Message Text="PackageOutputPath:          $(PackageOutputPath)"          Importance="High" />
+  </Target>
+</Project>

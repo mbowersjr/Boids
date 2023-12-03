@@ -1,0 +1,25 @@
+<Project>
+  <PropertyGroup Label="OutputBuildProps">
+    <Platform Condition="$(Platform) == ''">AnyCPU</Platform>
+    <Configuration Condition="$(Configuration) == ''">Debug</Configuration>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <CopyDebugSymbolFilesFromPackages>true</CopyDebugSymbolFilesFromPackages>
+    <CopyDocumentationFilesFromPackages>true</CopyDocumentationFilesFromPackages>
+
+    <!-- Custom properties -->
+    <BuildDir>$([MSBuild]::NormalizeDirectory($(MSBuildThisFileDirectory), "build"))</BuildDir>
+    <ProjectBuildDirectoryName>$(MSBuildProjectName)_$(Platform)_$(Configuration)</ProjectBuildDirectoryName>
+    <ProjectOutputPath>$([MSBuild]::NormalizeDirectory($(BuildDir), $(ProjectBuildDirectoryName)))</ProjectOutputPath>
+    <!-- <OutputPathWithoutEndSlash>$(BuildDir)$(ProjectBuildDirectoryName)</OutputPathWithoutEndSlash> -->
+    <BaseOutDir>$(BuildDir)</BaseOutDir>
+    <BasePublishDir>$([MSBuild]::NormalizeDirectory($(MSBuildThisFileDirectory), "publish"))</BasePublishDir>
+    
+    <!-- MSBuild defined properties redefined -->
+    <BaseIntermediateOutputPath>$([MSBuild]::NormalizeDirectory($(ProjectOutputPath), "obj"))</BaseIntermediateOutputPath>
+    <!-- <BaseIntermediateOutputPath>$(BuildDir)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath> -->
+    <BaseOutputPath>$([MSBuild]::NormalizeDirectory($(ProjectOutputPath), "bin"))</BaseOutputPath>
+    <!-- <BaseOutputPath>$(BuildDir)bin\$(MSBuildProjectName)\</BaseOutputPath> -->
+    <PackageOutputPath>$(BaseOutDir)</PackageOutputPath>
+  </PropertyGroup>
+</Project>

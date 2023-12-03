@@ -1,23 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net7.0-windows</TargetFramework>
     <AssemblyName>Boids.Core</AssemblyName>
     <RootNamespace>Boids.Core</RootNamespace>
-    <TieredCompilation>false</TieredCompilation>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <StartupObject>Boids.Core.Program</StartupObject>
-    <IsPackable>false</IsPackable>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <NoWarn>1701;1702;CS1591</NoWarn>
-    <Platforms>AnyCPU;x64</Platforms>
-  </PropertyGroup>  
-  <ItemGroup>
-    <Compile Remove="Content\bin\**\*;Content\obj\**\*" />
-    <EmbeddedResource Remove="Content\bin\**\*;Content\obj\**\*" />
-    <None Remove="Content\bin\**\*;Content\obj\**\*" />
-  </ItemGroup>
+  </PropertyGroup>
   <ItemGroup>
     <MonoGameContentReference Include="**\*.mgcb" />
   </ItemGroup>
@@ -27,17 +17,14 @@
     </None>    
   </ItemGroup>  
   <ItemGroup>
-    <TrimmerRootAssembly Include="Microsoft.Xna.Framework.Content.ContentTypeReader" Visible="false" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.89.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-    <PackageReference Include="MonoGame.Extended.Graphics" Version="3.8.0" />
-    <PackageReference Include="MonoGame.Extended.Input" Version="3.8.0" />
-    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
-    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+    <PackageReference Include="ImGui.NET" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="MonoGame.Extended.Graphics" />
+    <PackageReference Include="MonoGame.Extended.Input" />
+    <PackageReference Include="MonoGame.Framework.DesktopGL" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" />
   </ItemGroup>
   
-  <Import Project="..\..\Boids.Core.targets" />
+  <!-- <Import Project="..\..\Boids.Core.targets" /> -->
 </Project>

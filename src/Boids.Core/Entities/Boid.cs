@@ -17,9 +17,22 @@ namespace Boids.Core.Entities
 
         private static float BoidRadius => MainGame.Options.BoidRadius;
 
+        private System.Numerics.Vector2 _numPosition;
         private Vector2 _position;
-        public Vector2 Position { get => _position; set => _position = value; }
+
+        public Vector2 Position
+        {
+            get => _position;
+            set
+            {
+                _position = value;
+                _numPosition.X = value.X;
+                _numPosition.Y = value.Y;
+            }
+        }
+
         public ref Vector2 PositionRef => ref _position;
+        public ref System.Numerics.Vector2 NumPositionRef => ref _numPosition;
 
         private float _rotation;
         public float Rotation { get => _rotation; set => _rotation = value; }
@@ -27,8 +40,21 @@ namespace Boids.Core.Entities
         // private Point _cellPosition;
         // public Point CellPosition { get => _cellPosition; set => _cellPosition = value; }
 
+        private System.Numerics.Vector2 _numVelocity;
         private Vector2 _velocity;
-        public Vector2 Velocity { get => _velocity; set => _velocity = value; }
+        public Vector2 Velocity
+        {
+            get => _velocity;
+            set
+            {
+                _velocity = value;
+                _numVelocity.X = value.X;
+                _numVelocity.Y = value.Y;
+            }
+        }
+
+        public ref Vector2 VelocityRef => ref _velocity;
+        public ref System.Numerics.Vector2 NumVelocityRef => ref _numVelocity;
 
         private Vector2 _acceleration;
         public Vector2 Acceleration { get => _acceleration; set => _acceleration = value; }
