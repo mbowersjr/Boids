@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Boids.Core;
 using Boids.Core.Behaviors;
+using Boids.Core.Configuration;
 using MonoGame.Extended;
 using MonoGame.Extended.ViewportAdapters;
 
@@ -17,9 +18,11 @@ namespace Boids.Core.Entities
 
         private static float BoidRadius => MainGame.Options.BoidRadius;
 
-        private System.Numerics.Vector2 _numPosition;
-        private Vector2 _position;
+        #region Position
 
+        private System.Numerics.Vector2 _numPosition;
+        
+        private Vector2 _position;
         public Vector2 Position
         {
             get => _position;
@@ -33,12 +36,23 @@ namespace Boids.Core.Entities
 
         public ref Vector2 PositionRef => ref _position;
         public ref System.Numerics.Vector2 NumPositionRef => ref _numPosition;
+        
+        #endregion
+
+        #region Rotation
 
         private float _rotation;
-        public float Rotation { get => _rotation; set => _rotation = value; }
 
-        // private Point _cellPosition;
-        // public Point CellPosition { get => _cellPosition; set => _cellPosition = value; }
+        public float Rotation
+        {
+            get => _rotation; 
+            set => _rotation = value;
+        }
+        public ref float RotationRef => ref _rotation;
+
+        #endregion
+
+        #region Velocity
 
         private System.Numerics.Vector2 _numVelocity;
         private Vector2 _velocity;
@@ -56,45 +70,75 @@ namespace Boids.Core.Entities
         public ref Vector2 VelocityRef => ref _velocity;
         public ref System.Numerics.Vector2 NumVelocityRef => ref _numVelocity;
 
+        #endregion
+
+        #region Acceleration
+
         private Vector2 _acceleration;
-        public Vector2 Acceleration { get => _acceleration; set => _acceleration = value; }
+        public Vector2 Acceleration 
+        { 
+            get => _acceleration; 
+            set => _acceleration = value;
+        }
+        public ref Vector2 AccelerationRef => ref _acceleration;
+
+        #endregion
+
+        #region Id
+
+        private int _id;
+        public int Id
+        {
+            get => _id;
+            set => _id = value;
+        }
+        public ref int IdRef => ref _id;
+        
+        #endregion
 
         public Vector2 PreviousAcceleration { get; set; }
-        public bool IsActive { get; set; }
 
-        private readonly Flock _flock;
+        #region IsActive
 
-        public Boid(Flock flock)
+        private bool _isActive;
+        public bool IsActive
+        {
+            get => _isActive;
+            set => _isActive = value;
+        }
+        public ref bool IsActiveRef => ref _isActive;
+
+        #endregion
+
+
+        private readonly IFlock _flock;
+
+        public Boid(int id, IFlock flock)
         {
             _flock = flock;
         }
 
         public void Draw(GameTime gameTime, SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
-            //spriteBatch.Begin(samplerState: SamplerState.PointClamp,
-            //                  blendState: BlendState.NonPremultiplied,
-            //                  sortMode: SpriteSortMode.Immediate,
-            //                  transformMatrix: MainGame.ViewportAdapter.GetScaleMatrix());
-
             DrawBoid(spriteBatch);
 
-            if (MainGame.Options.DisplayDebugData)
+            if (!MainGame.Options.DisplayDebugData) 
+                return;
+
+            if (MainGame.Options.DisplayDistanceReferenceCircles)
             {
-                if (MainGame.Options.DisplayDistanceReferenceCircles)
-                {
-                    DrawDistanceReferenceCircles(spriteBatch);
-                }
-                if (MainGame.Options.AvoidedPointsDisplay.Enabled)
-                {
-                    DrawAvoidedPointLines(spriteBatch);
-                }
-                if (MainGame.Options.DisplayBoidPropertiesText)
-                {
-                    DrawBoidPropertiesText(spriteBatch, spriteFont);
-                }
+                DrawDistanceReferenceCircles(spriteBatch);
             }
 
-            //spriteBatch.End();
+            if (MainGame.Options.AvoidedPointsDisplay.Enabled)
+            {
+                DrawAvoidedPointLines(spriteBatch);
+            }
+                
+            if (MainGame.Options.DisplayBoidPropertiesText)
+            {
+                DrawBoidPropertiesText(spriteBatch, spriteFont);
+            }
         }
 
         private float _layerDepth_BoidBody = 1f;
@@ -153,6 +197,7 @@ namespace Boids.Core.Entities
             }
         }
 
+
         private IBehavior _avoidPointsBehavior;
         private void DrawAvoidedPointLines(SpriteBatch spriteBatch)
         {
@@ -189,15 +234,15 @@ namespace Boids.Core.Entities
             }
         }
         
-        private readonly StringBuilder _sb = new StringBuilder();
+        private static readonly StringBuilder _sb = new StringBuilder();
         private void DrawBoidPropertiesText(SpriteBatch spriteBatch, SpriteFont spriteFont)
         {
             _sb.Clear();
             
-            _sb.AppendFormat("P: {0:N3}, {1:N3}\n", Position.X, Position.Y);
-            _sb.AppendFormat("V: {0:N3}, {1:N3}\n", Velocity.X, Velocity.Y);
-            _sb.AppendFormat("A: {0:N3}, {1:N3}\n", Acceleration.X, Acceleration.Y);
-            _sb.AppendFormat("R: {0:N3} rad.   \n", Rotation);
+            _sb.AppendFormat("P: {0:N3}, {1:N3}\n", _position.X, _position.Y);
+            _sb.AppendFormat("V: {0:N3}, {1:N3}\n", _velocity.X, _velocity.Y);
+            _sb.AppendFormat("A: {0:N3}, {1:N3}\n", _acceleration.X, _acceleration.Y);
+            _sb.AppendFormat("R: {0:N3} rad.   \n", _rotation);
 
             var textSize = spriteFont.MeasureString(_sb);
             var textPosition = new Vector2(Position.X - textSize.X * 0.5f, Position.Y + BoidRadius * 1.5f);
@@ -213,7 +258,7 @@ namespace Boids.Core.Entities
                                    layerDepth: _layerDepth_BoidPropertiesText);
         }
         
-        public void Update(GameTime gameTime)
+        public void Update(GameTime gameTime, Rectangle viewportBounds)
         {
             if (!IsActive)
                 return;
@@ -230,25 +275,25 @@ namespace Boids.Core.Entities
 
             Acceleration = Vector2.Zero;
 
-            WrapAroundViewportEdges();
+            WrapAroundViewportEdges(MainGame.ViewportAdapter.BoundingRectangle);
         }
 
-        private void WrapAroundViewportEdges()
+        private void WrapAroundViewportEdges(Rectangle viewportBounds)
         {
             if (_position.X < 0f)
             {
-                _position.X = MainGame.ViewportAdapter.BoundingRectangle.Right;
+                _position.X = viewportBounds.Right;
             }
-            else if (_position.X > MainGame.ViewportAdapter.BoundingRectangle.Right)
+            else if (_position.X > viewportBounds.Right)
             {
                 _position.X = 0f;
             }
 
             if (_position.Y < 0f)
             {
-                _position.Y = MainGame.ViewportAdapter.BoundingRectangle.Bottom;
+                _position.Y = viewportBounds.Bottom;
             }
-            else if (_position.Y > MainGame.ViewportAdapter.BoundingRectangle.Bottom)
+            else if (_position.Y > viewportBounds.Bottom)
             {
                 _position.Y = 0f;
             }

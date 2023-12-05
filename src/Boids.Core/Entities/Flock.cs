@@ -27,6 +27,8 @@ namespace Boids.Core.Entities
     {
         public List<Boid> Boids { get; private set; } = new List<Boid>();
         public IFlockBehaviors Behaviors { get; private set; }
+        
+        private int _nextBoidId = 1;
 
         public Flock(IFlockBehaviors behaviors)
         {
@@ -37,10 +39,11 @@ namespace Boids.Core.Entities
         {
             Boids.Clear();
             Behaviors.Reset();
+            _nextBoidId = 1;
 
             for (var i = 0; i < MainGame.Options.Count; i++)
             {
-                var boid = new Boid(this);
+                var boid = new Boid(_nextBoidId++, this);
                 InitializeBoid(boid, spawnArea, options.Limits.SpawnVelocity.Range.Value);
                 
                 Boids.Add(boid);
@@ -101,7 +104,7 @@ namespace Boids.Core.Entities
                     boid.Acceleration += force;
                 }
                 
-                boid.Update(gameTime);
+                boid.Update(gameTime, MainGame.ViewportAdapter.BoundingRectangle);
             }
         }
     }

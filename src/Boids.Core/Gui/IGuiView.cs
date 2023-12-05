@@ -9,12 +9,14 @@ namespace Boids.Core.Gui
 {
     public interface IGuiView
     {
+        string Id { get; }
+        string Name { get; }
         bool IsVisible { get; set; }
-        GuiManager GuiManager { get; }
+        ref bool IsVisibleRef { get; }
         void Initialize();
         void Update(GameTime gameTime);
-        void LayoutView();
         void LoadContent();
         void UnloadContent();
+        void LayoutView();
     }
 }

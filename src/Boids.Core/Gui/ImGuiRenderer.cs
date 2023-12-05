@@ -20,13 +20,15 @@ namespace Boids.Core.Gui
     {
         public const float  FLT_MIN      =   1.175494351e-38F;
         
-        private MainGame _game;
+        private readonly MainGame _game;
+        private readonly IGuiFontProvider _fontProvider;
+        private readonly ILogger<ImGuiRenderer> _logger;
 
         // Graphics
-        private GraphicsDevice _graphicsDevice;
+        private readonly GraphicsDevice _graphicsDevice;
 
         private BasicEffect _effect;
-        private RasterizerState _rasterizerState;
+        private readonly RasterizerState _rasterizerState;
 
         private byte[] _vertexData;
         private VertexBuffer _vertexBuffer;
@@ -37,28 +39,23 @@ namespace Boids.Core.Gui
         private int _indexBufferSize;
 
         // Textures
-        private Dictionary<IntPtr, Texture2D> _loadedTextures;
+        private readonly Dictionary<IntPtr, Texture2D> _loadedTextures;
 
         private int _textureId;
         private IntPtr? _fontTextureId;
-
-        private ImFontPtr? _fontRegular;
-        private ImFontPtr? _fontBold;
-        private ImFontPtr? _fontMonoRegular;
-        private ImFontPtr? _fontMonoBold;
-
+        
         // Input
         private int _scrollWheelValue;
         private int _horizontalScrollWheelValue;
         private readonly float WHEEL_DELTA = 120;
-        private Keys[] _allKeys = Enum.GetValues<Keys>();
-        private ILogger<ImGuiRenderer> _logger;
+        private readonly Keys[] _allKeys = Enum.GetValues<Keys>();
 
-        public ImGuiRenderer(MainGame game, ILogger<ImGuiRenderer> logger)
+        public ImGuiRenderer(MainGame game, IGuiFontProvider fontProvider, ILogger<ImGuiRenderer> logger)
         {
             ArgumentNullException.ThrowIfNull(game, nameof(game));
 
             _game = game;
+            _fontProvider = fontProvider;
             _logger = logger;
 
             var context = ImGui.CreateContext();
@@ -83,69 +80,6 @@ namespace Boids.Core.Gui
 
         #region ImGuiRenderer
 
-
-        private static string GetFontResourceName(GuiFontStyle font)
-        {
-            switch (font)
-            {
-                case GuiFontStyle.Regular:     return "Roboto-Regular";
-                case GuiFontStyle.Bold:        return "Roboto-Bold";
-                case GuiFontStyle.MonoRegular: return "RobotoMono-Regular";
-                case GuiFontStyle.MonoBold:    return "RobotoMono-Bold";
-            }
-
-            throw new InvalidEnumArgumentException(nameof(font), (int)font, typeof(GuiFontStyle));
-        }
-
-        private string GetFontFilePath(GuiFontStyle font)
-        {
-            var fontName = GetFontResourceName(font);
-            return GetFontFilePath(fontName);
-        }
-
-        private string GetFontFilePath(string fontName)
-        {
-            if (!fontName.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase)) 
-                fontName = $"{fontName}.ttf";
-            
-            var resourceName = $"Fonts\\{fontName}";
-            var assemblyPath = Assembly.GetExecutingAssembly().Location;
-            var assemblyDirectory = Path.GetDirectoryName(assemblyPath)!;
-            var contentDirectory = Path.Combine(assemblyDirectory, _game.Content.RootDirectory);
-            var filePath = Path.Combine(contentDirectory, resourceName);
-            
-            Debug.Assert(File.Exists(filePath), $"Font file not found: \"{filePath}\"");
-
-            return filePath;
-        }
-
-        public enum GuiFontStyle
-        {
-            Regular = 0,
-            Bold = 1,
-            MonoRegular = 2,
-            MonoBold = 3
-        }
-
-        private ImFontPtr AddFont(GuiFontStyle fontStyle, float sizePixels)
-        {
-            return AddFont(fontStyle, sizePixels, ImGui.GetIO());
-        }
-
-        private ImFontPtr AddFont(GuiFontStyle fontStyle, float sizePixels, ImGuiIOPtr io)
-        {
-            var filePath = GetFontFilePath(fontStyle);
-            return io.Fonts.AddFontFromFileTTF(filePath, sizePixels, null, io.Fonts.GetGlyphRangesDefault());
-        }
-
-        private void AddFonts(ImGuiIOPtr io)
-        {
-            _fontRegular = AddFont(GuiFontStyle.Regular, 18, io);
-            _fontBold = AddFont(GuiFontStyle.Bold, 18, io);
-            _fontMonoRegular = AddFont(GuiFontStyle.MonoRegular, 18, io);
-            _fontMonoBold = AddFont(GuiFontStyle.MonoBold, 18, io);
-        }
-
         /// <summary>
         /// Creates a texture and loads the font data from ImGui. Should be called when the <see cref="GraphicsDevice" /> is initialized but before any rendering is done
         /// </summary>
@@ -154,7 +88,7 @@ namespace Boids.Core.Gui
             // Get font texture from ImGui
             var io = ImGui.GetIO();
 
-            AddFonts(io);
+            _fontProvider.LoadAllFonts(io);
 
             io.Fonts.GetTexDataAsRGBA32(
                 out_pixels: out byte* pixelData, 
@@ -237,23 +171,11 @@ namespace Boids.Core.Gui
         {
             var io = ImGui.GetIO();
 
-            // MonoGame-specific //////////////////////
             _game.Window.TextInput += (s, a) =>
             {
                 if (a.Character == '\t') return;
                 io.AddInputCharacter(a.Character);
             };
-
-            ///////////////////////////////////////////
-
-            // FNA-specific ///////////////////////////
-            //TextInputEXT.TextInput += c =>
-            //{
-            //    if (c == '\t') return;
-
-            //    ImGui.GetIO().AddInputCharacter(c);
-            //};
-            ///////////////////////////////////////////
         }
 
         /// <summary>

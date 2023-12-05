@@ -12,9 +12,11 @@ namespace Boids.Core.Gui.Views
 
     public class DebugConsoleView : GuiViewBase, IGuiWindow
     {
+        public override string Name => "DebugConsole";
+        public string WindowTitle { get; set; } = "Debug Console";
+
         public DebugConsoleState ConsoleState { get; private set; }
         
-        public string WindowTitle { get; set; } = "Debug Console";
 
         public DebugConsoleView(DebugConsoleState consoleState, GuiManager guiManager, ILogger<DebugConsoleView> logger)
             : base(guiManager, logger)

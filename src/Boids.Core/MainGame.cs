@@ -78,7 +78,7 @@ namespace Boids.Core
         
         protected override void Initialize()
         {
-            _guiManager = ActivatorUtilities.CreateInstance<GuiManager>(_serviceProvider);
+            _guiManager = _serviceProvider.GetService<GuiManager>();
             _guiManager.Initialize();
 
             _inputService = new InputListenerService(this);
