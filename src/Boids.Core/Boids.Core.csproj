@@ -6,7 +6,7 @@
     <StartupObject>Boids.Core.Program</StartupObject>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <NoWarn>1701;1702;CS1591</NoWarn>
+    <NoWarn>1701;1702;CS1591;CA1848</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <MonoGameContentReference Include="**\*.mgcb" />
@@ -24,6 +24,9 @@
     <PackageReference Include="MonoGame.Extended.Input" />
     <PackageReference Include="MonoGame.Framework.DesktopGL" />
     <PackageReference Include="MonoGame.Content.Builder.Task" />
+  </ItemGroup>  
+  <ItemGroup>
+    <Folder Include="Gui\Views\RenderView\" />
   </ItemGroup>
   
   <!-- <Import Project="..\..\Boids.Core.targets" /> -->

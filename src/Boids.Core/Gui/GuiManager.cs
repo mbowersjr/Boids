@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Xml.Linq;
 using Num = System.Numerics;
 using Microsoft.Xna.Framework;
 using Boids.Core.Gui.Views;
-using ImGuiNET;
-using System.Xml.Linq;
 using Microsoft.Xna.Framework.Content;
+using ImGuiNET;
 
 namespace Boids.Core.Gui
 {
@@ -24,13 +24,16 @@ namespace Boids.Core.Gui
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<GuiManager> _logger;
 
-        
         private bool _dockSpaceVisible = true;
         private uint _dockSpaceId;
         private bool _isFullscreen = true;
         private bool _windowPadding = false;
+
         private ImGuiViewportPtr _mainViewport;
 
+        public static float TextBaseWidth = ImGui.CalcTextSize("A").X;
+        public static float TextBaseHeight = ImGui.GetTextLineHeightWithSpacing();
+        
         private static class DebuggingWindows
         {
             public static bool Metrics = false;

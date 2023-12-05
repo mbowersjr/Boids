@@ -30,6 +30,7 @@ namespace Boids.Core
             return vector;
         }
         public static Vector2 NextVector2Within(ref RectangleF rect) => _instance.NextVector2Within(ref rect);
+        public static void NextVector2Within(ref RectangleF rect, out Vector2 result) => _instance.NextVector2Within(ref rect, out result);
 
     }
 }

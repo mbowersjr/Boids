@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Boids.Core.Gui.Views;
+using Microsoft.Extensions.Logging;
 
 namespace Boids.Core.Gui
 {

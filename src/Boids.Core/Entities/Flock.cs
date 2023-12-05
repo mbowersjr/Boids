@@ -54,7 +54,7 @@ namespace Boids.Core.Entities
         {
             boid.IsActive = true;
             
-            spawnArea.Inflate(-200f, -200f);
+            // spawnArea.Inflate(-200f, -200f);
 
             var position = FastRandomInst.NextVector2Within(ref spawnArea);
 
@@ -99,7 +99,7 @@ namespace Boids.Core.Entities
                         continue;
 
                     var force = behavior.Perform(boid, Boids);
-                    force *= behavior.Coefficient.GetValueOrDefault();
+                    force *= behavior.Coefficient;
                     
                     boid.Acceleration += force;
                 }

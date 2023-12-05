@@ -15,11 +15,56 @@ namespace Boids.Core.Behaviors
     public class SeekMouseBehavior : IBehavior
     {
         public string Name => "SeekMouse";
-        public bool Enabled { get; set; }
-        public float? Coefficient { get; set; }
-        public float? Radius { get; set; }
-        public float? RadiusSquared => Radius == null ? 0f : Radius * Radius;
-        public int? Order { get; set; }
+        
+        #region Radius
+
+        private float _radius;
+        public float Radius
+        {
+            get => _radius;
+            set => _radius = value;
+        }
+        public ref float RadiusRef => ref _radius;
+
+        public float RadiusSquared => _radius == null ? 0f : _radius * _radius;
+
+        #endregion
+
+        #region Order
+
+        private int _order;
+        public int Order
+        {
+            get => _order;
+            set => _order = value;
+        }
+        public ref int OrderRef => ref _order;
+
+        #endregion
+
+        #region Coefficient
+
+        private float _coefficient;
+        public float Coefficient
+        {
+            get => _coefficient;
+            set => _coefficient = value;
+        }
+        public ref float CoefficientRef => ref _coefficient;
+
+        #endregion
+
+        #region Enabled
+
+        private bool _enabled;
+        public bool Enabled
+        {
+            get => _enabled;
+            set => _enabled = value;
+        }
+        public ref bool EnabledRef => ref _enabled;
+
+        #endregion
 
         private MouseState _mouseState;
         

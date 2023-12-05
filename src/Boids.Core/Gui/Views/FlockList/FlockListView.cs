@@ -64,10 +64,10 @@ namespace Boids.Core.Gui.Views
         {
             var io = ImGui.GetIO();
             
-            // var windowSize = new Num.Vector2(400f, 600f);
+            var windowSize = new Num.Vector2(400f, 600f);
 
-            // ImGui.SetNextWindowSize(windowSize, ImGuiCond.Appearing);
-            // ImGui.SetNextWindowPos(new Num.Vector2(-10f, 10f), ImGuiCond.Appearing);
+            ImGui.SetNextWindowSize(windowSize, ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowPos(new Num.Vector2(-10f, 10f), ImGuiCond.FirstUseEver);
 
             if (!ImGui.Begin(WindowTitle, ref IsVisibleRef))
             {

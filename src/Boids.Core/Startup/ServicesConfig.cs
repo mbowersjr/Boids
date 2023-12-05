@@ -37,6 +37,7 @@ namespace Boids.Core.Startup
             
             services.AddSingleton<IGuiView, FlockListView>();
             services.AddSingleton<IGuiView, DebugConsoleView>();
+            services.AddSingleton<IGuiView, BehaviorsView>();
 
             services.AddSingleton<MainGame>();
             services.AddHostedService<MainGameHostedService>();

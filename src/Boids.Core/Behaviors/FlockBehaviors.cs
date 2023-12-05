@@ -82,9 +82,9 @@ namespace Boids.Core.Behaviors
                     _logger.LogDebug("Applying settings to '{BehaviorName}' behavior", instance.Name);
 
                     instance.Enabled = options.Enabled;
-                    instance.Coefficient = options.Coefficient;
-                    instance.Radius = options.Radius;
-                    instance.Order = options.Order;
+                    instance.Coefficient = options.Coefficient.GetValueOrDefault(1f);
+                    instance.Radius = options.Radius.GetValueOrDefault(10f);
+                    instance.Order = options.Order.GetValueOrDefault();
                 }
                 else
                 {
@@ -93,19 +93,19 @@ namespace Boids.Core.Behaviors
                     instance.Enabled = true;
                     instance.Coefficient = 1f;
                     instance.Radius = 25f;
-                    instance.Order = null;
+                    instance.Order = 0;
                 }
 
                 Behaviors.Add(instance);
             }
 
-            _orderedBehaviors = Behaviors.OrderBy(x => x.Order.HasValue).ThenBy(x => x.Order ?? int.MaxValue).ThenBy(x => x.Name).ToList();
+            _orderedBehaviors = Behaviors.OrderBy(x => x.Order != 0).ThenBy(x => x.Order).ThenBy(x => x.Name).ToList();
 
             _logger.LogDebug("Behavior excecution order:");
             for (int i = 0; i < _orderedBehaviors.Count; i++)
             {
                 var behavior = _orderedBehaviors[i];
-                if (behavior.Order.HasValue)
+                if (behavior.Order != 0)
                 {
                     _logger.LogDebug("#{Index}. {BehaviorName} (Order: {BehaviorOrder})", i+1, behavior.Name, behavior.Order);
                 }

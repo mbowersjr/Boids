@@ -34,6 +34,7 @@ namespace Boids.Core
 
 
         public static ViewportAdapter ViewportAdapter { get; private set; }
+        
         public static BoidsOptions Options { get; set; }
         
         private GuiManager _guiManager;
@@ -45,16 +46,16 @@ namespace Boids.Core
                         ILogger<MainGame> logger,
                         IServiceProvider serviceProvider)
         {
-            _serviceProvider = serviceProvider;
 
             _flock = flock;
             _optionsMonitor = optionsMonitor;
             _partitionGrid = partitionGrid;
             _logger = logger;
-            
-            _optionsMonitor.OnChange(OptionsMonitor_OnChanged);
+            _serviceProvider = serviceProvider;
+
             Options = _optionsMonitor.CurrentValue;
-            
+            _optionsMonitor.OnChange(OptionsMonitor_OnChanged);
+
 
             Graphics = new GraphicsDeviceManager(this);
             InitializeViewport();
@@ -99,18 +100,12 @@ namespace Boids.Core
             if (Graphics == null)
                 return;
             
-            var virtualWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
-            var virtualHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
-            Graphics.PreferredBackBufferWidth = virtualWidth;
-            Graphics.PreferredBackBufferHeight = virtualHeight;
+            Graphics.PreferredBackBufferWidth = (int)(Options.Graphics.Resolution.X * Options.Graphics.Resolution.Scale);
+            Graphics.PreferredBackBufferHeight = (int)(Options.Graphics.Resolution.Y * Options.Graphics.Resolution.Scale);
             Graphics.PreferMultiSampling = true;
             Graphics.ApplyChanges();
 
-            ViewportAdapter = new BoxingViewportAdapter(window: Window, 
-                                                        graphicsDevice: Graphics.GraphicsDevice, 
-                                                        virtualWidth: virtualWidth, 
-                                                        virtualHeight: virtualHeight);
-
+            ViewportAdapter = new WindowViewportAdapter(window: Window, Graphics.GraphicsDevice);
             ViewportAdapter.Reset();
             
             CenterWindow();
@@ -118,7 +113,6 @@ namespace Boids.Core
             using (_logger.BeginScope("Initialized viewport:"))
             {
                 _logger.LogInformation("Resolution: {X} x {Y}", ViewportAdapter.ViewportWidth, ViewportAdapter.ViewportHeight);
-                _logger.LogInformation("Virtual resolution: {X} x {Y}", ViewportAdapter.VirtualWidth, ViewportAdapter.VirtualHeight);
                 _logger.LogInformation("Window position: {X} x {Y}", Window.Position.X, Window.Position.Y);
                 _logger.LogInformation("VSync: {VSync}", Graphics.SynchronizeWithVerticalRetrace);
             }
@@ -172,64 +166,47 @@ namespace Boids.Core
         
         private bool OpenFileInExternalEditor(FileInfo file)
         {
-            if (file == null)
-                throw new ArgumentNullException(nameof(file));
+            ArgumentNullException.ThrowIfNull(file, nameof(file));
             
             if (!file.Exists)
-                throw new FileNotFoundException("File does not exist", file.FullName);
+                throw new FileNotFoundException(null, file.FullName);
 
-            if (_openAppSettingsProcess == null) 
-                _openAppSettingsProcess = new Process();
-
-            _openAppSettingsProcess.StartInfo.FileName = "explorer";
-            _openAppSettingsProcess.StartInfo.Arguments = $"\"{file.FullName}\"";
-            _openAppSettingsProcess.EnableRaisingEvents = true;
-            
-            _logger.LogInformation("Opened appsettings.json with process: {ProcessName}", _openAppSettingsProcess.ProcessName);
-
-            _openAppSettingsProcess.Exited += (_, _) =>
+            using (_openAppSettingsProcess ??= new Process())
             {
-                _logger.LogInformation("Process used to open appsettings.json has exited with code {ExitCode}", _openAppSettingsProcess.ExitCode);
-            };
-            
-            return _openAppSettingsProcess.Start();
+                _openAppSettingsProcess.StartInfo.FileName = "explorer";
+                _openAppSettingsProcess.StartInfo.Arguments = $"\"{file.FullName}\"";
+                _openAppSettingsProcess.EnableRaisingEvents = true;
+
+                _logger.LogInformation("Opened appsettings.json with process: {ProcessName}", _openAppSettingsProcess.ProcessName);
+
+                _openAppSettingsProcess.Exited += (sender, e) => {
+                    _logger.LogInformation("Process used to open appsettings.json has exited with code {ExitCode}", ((Process)sender!).ExitCode);
+                };
+
+                return _openAppSettingsProcess.Start();
+            }
         }
         
         private FileInfo GetAppSettingsFile()
         {
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
             var assemblyFile = new FileInfo(assemblyLocation);
-            var assemblyDirectory = assemblyFile.Directory;
-
-            if (assemblyDirectory == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            var appSettingsFile = assemblyDirectory.GetFiles("appsettings.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
+            var appSettingsFile = assemblyFile.Directory!.EnumerateFiles("appsettings.json", SearchOption.TopDirectoryOnly).FirstOrDefault();
 
             if (appSettingsFile == null)
             {
-                _logger.LogWarning("appsettings.json file not found in assembly directory {AssemblyDirectory}", assemblyDirectory.FullName);
+                _logger.LogWarning("appsettings.json file not found in assembly directory {AssemblyDirectory}", assemblyFile.Directory!.FullName);
                 return null;
             }
 
-            _logger.LogDebug("Located appsettings.json file at: {AppSettingsFilePath}", appSettingsFile.FullName);
+            _logger.LogInformation("Found appsettings.json file at {AppSettingsFilePath}", appSettingsFile.FullName);
+            
             return appSettingsFile;
         }
 
         private void CenterWindow()
         {
-            var displayMode = Graphics.GraphicsDevice.DisplayMode;
-            
-            // Screen center
-            var position = new Point(displayMode.Width / 2, displayMode.Height / 2);
-            
-            // Offset half window size
-            position.X -= Window.ClientBounds.Width / 2;
-            position.Y -= Window.ClientBounds.Height / 2;
-
-            Window.Position = position;
+            Window.Position = Graphics.GraphicsDevice.DisplayMode.TitleSafeArea.Center - Window.ClientBounds.Center;;
         }
 
         protected override void LoadContent()

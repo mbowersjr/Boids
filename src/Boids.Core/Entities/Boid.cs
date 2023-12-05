@@ -13,8 +13,7 @@ namespace Boids.Core.Entities
 {
     public class Boid
     {
-        private static Texture2D _boidSprite;
-        public static Texture2D BoidSprite { get => _boidSprite; set => _boidSprite = value; }
+        public static Texture2D BoidSprite { get; set; }
 
         private static float BoidRadius => MainGame.Options.BoidRadius;
 
@@ -115,6 +114,7 @@ namespace Boids.Core.Entities
 
         public Boid(int id, IFlock flock)
         {
+            _id = id;
             _flock = flock;
         }
 
@@ -149,16 +149,6 @@ namespace Boids.Core.Entities
 
         private void DrawBoid(SpriteBatch spriteBatch)
         {
-            // spriteBatch.Draw(texture: BoidSprite,
-            //                  position: Position,
-            //                  sourceRectangle: null,
-            //                  color: BoidColor,
-            //                  rotation: Rotation,
-            //                  origin: _boidSpriteOrigin,
-            //                  scale: 1f,
-            //                  effects: SpriteEffects.None,
-            //                  layerDepth: 0f);
-            
             spriteBatch.DrawCircle(center: Position, 
                                    radius: BoidRadius, 
                                    sides: 32, 

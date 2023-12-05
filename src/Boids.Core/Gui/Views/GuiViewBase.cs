@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Xna.Framework;
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Views
 {
     public abstract class GuiViewBase : IGuiView, IDisposable
     {

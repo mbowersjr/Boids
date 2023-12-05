@@ -33,7 +33,7 @@ namespace Boids.Core.Services
 
         public void Initialize()
         {
-            ViewportWidth = MainGame.Options.Graphics.Resolution.X;
+            ViewportWidth = MainGame.ViewportAdapter.ViewportWidth;
             ViewportHeight = MainGame.Options.Graphics.Resolution.Y;
             CellCountX = MainGame.Options.PartitionGrid.CellsX;
             CellCountY = MainGame.Options.PartitionGrid.CellsY;

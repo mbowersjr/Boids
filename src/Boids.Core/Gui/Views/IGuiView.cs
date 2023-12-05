@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace Boids.Core.Gui
+namespace Boids.Core.Gui.Views
 {
     public interface IGuiView
     {

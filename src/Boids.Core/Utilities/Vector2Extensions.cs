@@ -16,6 +16,11 @@ namespace Boids.Core
 
         public static float ToRadians(this Vector2 vector) => MathHelper.WrapAngle(MathF.Atan2(vector.Y, vector.X));
 
+        public static void NextVector2Within(this FastRandom random, ref RectangleF rect, out Vector2 result)
+        {
+            result = random.NextVector2Within(ref rect);
+        }
+
         public static Vector2 NextVector2Within(this FastRandom random, ref RectangleF rect)
         {
             var x = random.NextSingle(rect.Left, rect.Right);
